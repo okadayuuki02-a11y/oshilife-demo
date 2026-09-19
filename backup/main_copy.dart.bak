@@ -1,0 +1,1532 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
+import 'models/oshi.dart';
+import 'screens/oshi_add_screen.dart';
+import 'screens/oshi_edit_screen.dart';
+import 'screens/graduated_oshi_screen.dart';
+import 'services/oshi_storage.dart';
+
+void main() {
+  runApp(const OshiLifeApp());
+}
+
+class OshiLifeApp extends StatelessWidget {
+  const OshiLifeApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'OshiLife',
+
+      locale: const Locale('ja', 'JP'),
+
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+
+      supportedLocales: const [
+        Locale('ja', 'JP'),
+      ],
+
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF9B5CFF),
+        ),
+      ),
+
+      home: const MainScreen(),
+    );
+  }
+}
+
+class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  static const purple = Color(0xFF9B5CFF);
+  static const lightPurple = Color(0xFFF2E8FF);
+  static const background = Color(0xFFFFF8FF);
+
+  int _selectedIndex = 0;
+
+  List<Oshi> _oshis = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOshis();
+  }
+
+  Future<void> _loadOshis() async {
+    final savedOshis = await OshiStorage.loadOshis();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _oshis = savedOshis;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _saveOshis() async {
+    await OshiStorage.saveOshis(_oshis);
+  }
+
+  Oshi? get _primaryOshi {
+    for (final oshi in _oshis) {
+      if (oshi.isPrimary && !oshi.isGraduated) {
+        return oshi;
+      }
+    }
+
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: background,
+        body: Center(
+          child: CircularProgressIndicator(
+            color: purple,
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: background,
+      body: _buildPage(),
+
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        height: 66,
+        indicatorColor: lightPurple,
+
+        onDestinationSelected: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(
+              Icons.home_rounded,
+              color: purple,
+            ),
+            label: 'ホーム',
+          ),
+
+          NavigationDestination(
+            icon: Icon(Icons.favorite_border_rounded),
+            selectedIcon: Icon(
+              Icons.favorite_rounded,
+              color: purple,
+            ),
+            label: '推し',
+          ),
+
+          NavigationDestination(
+            icon: Icon(Icons.event_outlined),
+            selectedIcon: Icon(
+              Icons.event_rounded,
+              color: purple,
+            ),
+            label: 'イベント',
+          ),
+
+          NavigationDestination(
+            icon: Icon(
+              Icons.account_balance_wallet_outlined,
+            ),
+            selectedIcon: Icon(
+              Icons.account_balance_wallet_rounded,
+              color: purple,
+            ),
+            label: '資金',
+          ),
+
+          NavigationDestination(
+            icon: Icon(Icons.more_horiz_rounded),
+            label: 'その他',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPage() {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildHome();
+
+      case 1:
+        return _buildOshiPage();
+
+      case 2:
+        return _buildPlaceholder(
+          icon: Icons.event_rounded,
+          title: 'イベント',
+          text: 'イベント画面',
+        );
+
+      case 3:
+        return _buildPlaceholder(
+          icon: Icons.account_balance_wallet_rounded,
+          title: '推し活資金',
+          text: '資金画面',
+        );
+
+      case 4:
+        return _buildPlaceholder(
+          icon: Icons.more_horiz_rounded,
+          title: 'その他',
+          text: 'その他画面',
+        );
+
+      default:
+        return _buildHome();
+    }
+  }
+
+  // =========================================================
+  // ホーム
+  // =========================================================
+
+  Widget _buildHome() {
+    final primary = _primaryOshi;
+
+    return SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: 430,
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 340;
+              final horizontalPadding = isNarrow ? 12.0 : 18.0;
+
+              return SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  12,
+                  horizontalPadding,
+                  18,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () {},
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(
+                            Icons.menu_rounded,
+                          ),
+                        ),
+
+                        const SizedBox(width: 2),
+
+                        const Icon(
+                          Icons.favorite_rounded,
+                          color: purple,
+                          size: 26,
+                        ),
+
+                        const SizedBox(width: 6),
+
+                        Expanded(
+                          child: Text(
+                            'OshiLife',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: isNarrow ? 20 : 23,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            IconButton(
+                              onPressed: () {},
+                              visualDensity: VisualDensity.compact,
+                              icon: const Icon(
+                                Icons.notifications_none_rounded,
+                                size: 25,
+                              ),
+                            ),
+
+                            Positioned(
+                              right: 3,
+                              top: 1,
+                              child: Container(
+                                width: 17,
+                                height: 17,
+                                alignment: Alignment.center,
+                                decoration: const BoxDecoration(
+                                  color: Colors.redAccent,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Text(
+                                  '3',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    const Padding(
+                      padding: EdgeInsets.only(
+                        left: 10,
+                        top: 2,
+                        bottom: 15,
+                      ),
+                      child: Text(
+                        '推しと過ごす、最高の毎日を。',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ),
+
+                    const Text(
+                      '次回の予定',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () {
+                        setState(() {
+                          _selectedIndex = 2;
+                        });
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(
+                          isNarrow ? 14 : 16,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFFA98AF2),
+                              Color(0xFF8666DC),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'NEXT LIVE',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+
+                            const SizedBox(height: 6),
+
+                            Text(
+                              'AQUA PLANET',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: isNarrow ? 19 : 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            const Row(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today_rounded,
+                                  color: Colors.white70,
+                                  size: 15,
+                                ),
+                                SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    '次回イベントをここに表示',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 17),
+
+                    const Text(
+                      '推し活資金',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () {
+                        setState(() {
+                          _selectedIndex = 3;
+                        });
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(
+                          isNarrow ? 14 : 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: const Color(0xFFE9E0FA),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                const Expanded(
+                                  child: Text(
+                                    '現在残高',
+                                    style: TextStyle(
+                                      color: Colors.black54,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      '¥40,000',
+                                      style: TextStyle(
+                                        fontSize: isNarrow ? 19 : 22,
+                                        fontWeight: FontWeight.bold,
+                                        color: purple,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 13),
+
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: const LinearProgressIndicator(
+                                value: 0.33,
+                                minHeight: 8,
+                                backgroundColor: Color(0xFFECE7F5),
+                                color: purple,
+                              ),
+                            ),
+
+                            const SizedBox(height: 11),
+
+                            const Row(
+                              children: [
+                                Expanded(
+                                  child: MoneyItem(
+                                    label: '今月予算',
+                                    value: '¥60,000',
+                                  ),
+                                ),
+                                Expanded(
+                                  child: MoneyItem(
+                                    label: '使用額',
+                                    value: '¥20,000',
+                                  ),
+                                ),
+                                Expanded(
+                                  child: MoneyItem(
+                                    label: '使用率',
+                                    value: '33%',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 17),
+
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            '推し',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedIndex = 1;
+                            });
+                          },
+                          child: const Text(
+                            '推し一覧へ',
+                            style: TextStyle(
+                              color: purple,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    if (primary != null)
+                      InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () {
+                          _openOshiDetail(primary);
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isNarrow ? 10 : 14,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: const Color(0xFFE9E0FA),
+                            ),
+                          ),
+                          child: OshiListTile(
+                            oshi: primary,
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: const Color(0xFFE9E0FA),
+                          ),
+                        ),
+                        child: const Text(
+                          '1推しがまだ登録されていません',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  // =========================================================
+  // 推し一覧
+  // =========================================================
+
+  Widget _buildOshiPage() {
+    final activeOshis = _oshis
+        .where(
+          (oshi) => !oshi.isGraduated,
+        )
+        .toList();
+
+    final primary = _primaryOshi;
+
+    return SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: 430,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              18,
+              16,
+              18,
+              10,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      '推し',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+
+                    const Spacer(),
+
+                    FilledButton.icon(
+                      onPressed: _showAddOshi,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: purple,
+                      ),
+                      icon: const Icon(
+                        Icons.add_rounded,
+                        size: 19,
+                      ),
+                      label: const Text('追加'),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 4),
+
+                const Text(
+                  'あなたの大切な推しを管理',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.black45,
+                  ),
+                ),
+
+                const SizedBox(height: 22),
+
+                if (primary != null) ...[
+                  const Text(
+                    '1推し',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 9),
+
+                  InkWell(
+                    borderRadius: BorderRadius.circular(24),
+                    onTap: () {
+                      _openOshiDetail(primary);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(17),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFFF3EDFF),
+                            Color(0xFFFFF9FF),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: const Color(0xFFD9C8FA),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          OshiListTile(
+                            oshi: primary,
+                          ),
+
+                          const SizedBox(height: 15),
+
+                          const Divider(
+                            height: 1,
+                            color: Color(0xFFE1D8F2),
+                          ),
+
+                          const SizedBox(height: 14),
+
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OshiStat(
+                                  label: '推し日数',
+                                  value: primary.oshiDays == null
+                                      ? '未設定'
+                                      : '${primary.oshiDays}日',
+                                ),
+                              ),
+
+                              Expanded(
+                                child: OshiStat(
+                                  label: 'アプリ登録',
+                                  value:
+                                      '${primary.registeredDays}日',
+                                ),
+                              ),
+
+                              const Expanded(
+                                child: OshiStat(
+                                  label: 'ポイント',
+                                  value: '1 pt',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 22),
+                ],
+
+                Row(
+                  children: [
+                    const Text(
+                      '推し一覧',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const Spacer(),
+
+                    Text(
+                      '${activeOshis.length}人',
+                      style: const TextStyle(
+                        color: Colors.black45,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 9),
+
+                Expanded(
+                  child: activeOshis.isEmpty
+                      ? const Center(
+                          child: Text(
+                            '推しを追加してみよう！',
+                            style: TextStyle(
+                              color: Colors.black45,
+                            ),
+                          ),
+                        )
+                      : ListView.separated(
+                          itemCount: activeOshis.length,
+
+                          separatorBuilder: (
+                            context,
+                            index,
+                          ) {
+                            return const SizedBox(
+                              height: 10,
+                            );
+                          },
+
+                          itemBuilder: (
+                            context,
+                            index,
+                          ) {
+                            final oshi =
+                                activeOshis[index];
+
+                            return InkWell(
+                              borderRadius:
+                                  BorderRadius.circular(20),
+                              onTap: () {
+                                _openOshiDetail(oshi);
+                              },
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius:
+                                      BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color:
+                                        const Color(0xFFE9E0FA),
+                                  ),
+                                ),
+                                child: OshiListTile(
+                                  oshi: oshi,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+
+                const SizedBox(height: 10),
+
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return GraduatedOshiScreen(
+                            oshis: _oshis,
+                          );
+                        },
+                      ),
+                    );
+
+                    setState(() {});
+                    await _saveOshis();
+                  },
+
+                  style: OutlinedButton.styleFrom(
+                    minimumSize:
+                        const Size(double.infinity, 48),
+                    foregroundColor: purple,
+                  ),
+
+                  icon: const Icon(
+                    Icons.history_rounded,
+                  ),
+
+                  label: const Text(
+                    '卒業・過去の推しを見る',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // =========================================================
+  // 推し追加
+  // =========================================================
+
+  Future<void> _showAddOshi() async {
+    final newOshi = await Navigator.of(context).push<Oshi>(
+      MaterialPageRoute(
+        builder: (context) {
+          return const OshiAddScreen();
+        },
+      ),
+    );
+
+    if (newOshi == null) {
+      return;
+    }
+
+    setState(() {
+      if (newOshi.isPrimary) {
+        for (final oshi in _oshis) {
+          oshi.isPrimary = false;
+        }
+      }
+
+      _oshis.add(newOshi);
+    });
+
+    await _saveOshis();
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${newOshi.name}を推しに追加しました！',
+        ),
+      ),
+    );
+  }
+
+  // =========================================================
+  // 推し詳細
+  // =========================================================
+
+  void _openOshiDetail(Oshi oshi) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) {
+          return OshiDetailScreen(
+            oshi: oshi,
+
+            onChanged: (updatedOshi) async {
+              setState(() {
+                if (updatedOshi.isPrimary) {
+                  for (final item in _oshis) {
+                    if (item.id != updatedOshi.id) {
+                      item.isPrimary = false;
+                    }
+                  }
+                }
+              });
+
+              await _saveOshis();
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  // =========================================================
+  // 仮画面
+  // =========================================================
+
+  Widget _buildPlaceholder({
+    required IconData icon,
+    required String title,
+    required String text,
+  }) {
+    return SafeArea(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 55,
+              color: purple,
+            ),
+
+            const SizedBox(height: 14),
+
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              text,
+              style: const TextStyle(
+                fontSize: 15,
+                color: Colors.black45,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ===========================================================
+// 推し詳細画面
+// ===========================================================
+
+class OshiDetailScreen extends StatefulWidget {
+  final Oshi oshi;
+  final Future<void> Function(Oshi) onChanged;
+
+  const OshiDetailScreen({
+    super.key,
+    required this.oshi,
+    required this.onChanged,
+  });
+
+  @override
+  State<OshiDetailScreen> createState() =>
+      _OshiDetailScreenState();
+}
+
+class _OshiDetailScreenState
+    extends State<OshiDetailScreen> {
+  static const purple = Color(0xFF9B5CFF);
+  static const background = Color(0xFFFFF8FF);
+
+  Future<void> _editOshi() async {
+    final updatedOshi =
+        await Navigator.of(context).push<Oshi>(
+      MaterialPageRoute(
+        builder: (context) {
+          return OshiEditScreen(
+            oshi: widget.oshi,
+          );
+        },
+      ),
+    );
+
+    if (updatedOshi == null) {
+      return;
+    }
+
+    await widget.onChanged(updatedOshi);
+
+    setState(() {});
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          '推し情報を更新しました！',
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final oshi = widget.oshi;
+
+    return Scaffold(
+      backgroundColor: background,
+
+      appBar: AppBar(
+        backgroundColor: background,
+
+        title: const Text(
+          '推し詳細',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+
+        actions: [
+          TextButton.icon(
+            onPressed: _editOshi,
+            icon: const Icon(
+              Icons.edit_rounded,
+              size: 18,
+            ),
+            label: const Text(
+              '編集',
+            ),
+          ),
+
+          const SizedBox(width: 8),
+        ],
+      ),
+
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: 430,
+          ),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              18,
+              10,
+              18,
+              30,
+            ),
+            children: [
+              const Center(
+                child: CircleAvatar(
+                  radius: 53,
+                  backgroundColor: Color(0xFFE9DFFF),
+                  child: Icon(
+                    Icons.person_rounded,
+                    size: 60,
+                    color: purple,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              if (oshi.isPrimary)
+                const Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.workspace_premium_rounded,
+                        color: Color(0xFFFFB300),
+                        size: 18,
+                      ),
+
+                      SizedBox(width: 4),
+
+                      Text(
+                        '1推し',
+                        style: TextStyle(
+                          color: purple,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              const SizedBox(height: 5),
+
+              Text(
+                oshi.name,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+
+              Text(
+                oshi.groupName,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.black54,
+                  fontSize: 14,
+                ),
+              ),
+
+              const SizedBox(height: 22),
+
+              Container(
+                padding: const EdgeInsets.all(17),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFFE9E0FA),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: DetailStat(
+                        title: '推し日数',
+                        value: oshi.oshiDays == null
+                            ? '未設定'
+                            : '${oshi.oshiDays}日',
+                      ),
+                    ),
+
+                    Expanded(
+                      child: DetailStat(
+                        title: '登録日数',
+                        value: '${oshi.registeredDays}日',
+                      ),
+                    ),
+
+                    const Expanded(
+                      child: DetailStat(
+                        title: 'ポイント',
+                        value: '1 pt',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 18),
+
+              DetailCard(
+                icon: Icons.music_note_rounded,
+                title: '好きな曲',
+                value: oshi.favoriteSong,
+              ),
+
+              const SizedBox(height: 10),
+
+              const DetailCard(
+                icon: Icons.photo_camera_rounded,
+                title: 'チェキ',
+                value: '撮影記録を見る',
+              ),
+
+              const SizedBox(height: 10),
+
+              const DetailCard(
+                icon: Icons.event_available_rounded,
+                title: '参加イベント',
+                value: '参加履歴を見る',
+              ),
+
+              const SizedBox(height: 10),
+
+              const DetailCard(
+                icon: Icons.timeline_rounded,
+                title: '推し年表',
+                value: '記念日・活動履歴を見る',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ===========================================================
+// 共通パーツ
+// ===========================================================
+
+class OshiListTile extends StatelessWidget {
+  final Oshi oshi;
+
+  const OshiListTile({
+    super.key,
+    required this.oshi,
+  });
+
+  static const purple = Color(0xFF9B5CFF);
+  static const lightPurple = Color(0xFFF2E8FF);
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 280;
+        final avatarRadius = compact ? 22.0 : 27.0;
+
+        return Row(
+          children: [
+            CircleAvatar(
+              radius: avatarRadius,
+              backgroundColor: lightPurple,
+              child: Icon(
+                Icons.person_rounded,
+                color: purple,
+                size: compact ? 26 : 30,
+              ),
+            ),
+
+            SizedBox(width: compact ? 9 : 13),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (oshi.isPrimary)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.workspace_premium_rounded,
+                          size: compact ? 15 : 17,
+                          color: const Color(0xFFFFB300),
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            '1推し',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: purple,
+                              fontWeight: FontWeight.bold,
+                              fontSize: compact ? 11 : 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                  Text(
+                    oshi.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: compact ? 15 : 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  Text(
+                    oshi.groupName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontSize: compact ? 11 : 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 4),
+
+            Icon(
+              Icons.chevron_right_rounded,
+              color: Colors.black38,
+              size: compact ? 20 : 24,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class MoneyItem extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const MoneyItem({
+    super.key,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Column(
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: const TextStyle(
+                color: Colors.black45,
+                fontSize: 11,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 3),
+
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class OshiStat extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const OshiStat({
+    super.key,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Column(
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: const TextStyle(
+                fontSize: 10,
+                color: Colors.black45,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 4),
+
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class DetailStat extends StatelessWidget {
+  final String title;
+  final String value;
+
+  const DetailStat({
+    super.key,
+    required this.title,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Column(
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              title,
+              maxLines: 1,
+              style: const TextStyle(
+                fontSize: 10,
+                color: Colors.black45,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 5),
+
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class DetailCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String value;
+
+  const DetailCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: const Color(0xFFE9E0FA),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF2E8FF),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(
+              icon,
+              color: const Color(0xFF9B5CFF),
+            ),
+          ),
+
+          const SizedBox(width: 13),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 2),
+
+                Text(
+                  value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.black45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const Icon(
+            Icons.chevron_right_rounded,
+            color: Colors.black38,
+          ),
+        ],
+      ),
+    );
+  }
+}
