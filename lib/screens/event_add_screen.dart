@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../models/oshi_event.dart';
@@ -29,10 +32,7 @@ class EventAddScreen extends StatelessWidget {
             children: [
               const Text(
                 'なるべく入力しなくていい方法から選べます',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 16),
               _routeCard(
@@ -41,7 +41,8 @@ class EventAddScreen extends StatelessWidget {
                 icon: Icons.search_rounded,
                 title: 'イベントを検索して追加',
                 subtitle: 'OshiLifeに登録済みのイベントを探して、そのまま予定に追加',
-                onTap: () => _openRoute(context, const SharedEventSearchScreen()),
+                onTap: () =>
+                    _openRoute(context, const SharedEventSearchScreen()),
               ),
               const SizedBox(height: 12),
               _routeCard(
@@ -69,9 +70,8 @@ class EventAddScreen extends StatelessWidget {
   }
 
   Future<void> _openRoute(BuildContext context, Widget screen) async {
-    final event = await Navigator.of(context).push<OshiEvent>(
-      MaterialPageRoute(builder: (_) => screen),
-    );
+    final event = await Navigator.of(context)
+        .push<OshiEvent>(MaterialPageRoute(builder: (_) => screen));
 
     if (event == null || !context.mounted) return;
     Navigator.of(context).pop(event);
@@ -144,7 +144,8 @@ class SharedEventSearchScreen extends StatefulWidget {
   const SharedEventSearchScreen({super.key});
 
   @override
-  State<SharedEventSearchScreen> createState() => _SharedEventSearchScreenState();
+  State<SharedEventSearchScreen> createState() =>
+      _SharedEventSearchScreenState();
 }
 
 class _SharedEventSearchScreenState extends State<SharedEventSearchScreen> {
@@ -243,7 +244,10 @@ class _SharedEventSearchScreenState extends State<SharedEventSearchScreen> {
                   children: [
                     Text(
                       sample.title,
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text('9/12（土） 17:00 OPEN / 17:30 START'),
@@ -285,42 +289,42 @@ class OcrEventScreen extends StatelessWidget {
   static const background = Color(0xFFFFF8FF);
 
   OshiEvent get sample => OshiEvent(
-        title: 'IDOL CROSSING',
-        date: DateTime(2026, 9, 21),
-        venue: 'Spotify O-EAST',
-        openTime: const TimeOfDay(hour: 16, minute: 0),
-        startTime: const TimeOfDay(hour: 16, minute: 30),
-        performers: const ['AQUA PLANET', 'MOONLiGHT', 'Stella!'],
-        timetable: const [
-          EventScheduleEntry(
-            title: 'AQUA PLANET',
-            startTime: TimeOfDay(hour: 17, minute: 10),
-            endTime: TimeOfDay(hour: 17, minute: 30),
-          ),
-          EventScheduleEntry(
-            title: 'Stella!',
-            startTime: TimeOfDay(hour: 17, minute: 40),
-            endTime: TimeOfDay(hour: 18, minute: 0),
-          ),
-          EventScheduleEntry(
-            title: 'MOONLiGHT',
-            startTime: TimeOfDay(hour: 18, minute: 15),
-            endTime: TimeOfDay(hour: 18, minute: 35),
-          ),
-        ],
-        primaryGroup: 'AQUA PLANET',
-        wantedGroups: const ['AQUA PLANET', 'MOONLiGHT'],
-        mySchedule: const [
-          EventScheduleEntry(
-            title: 'AQUA PLANET',
-            startTime: TimeOfDay(hour: 19, minute: 30),
-            endTime: TimeOfDay(hour: 20, minute: 30),
-            label: '特典会',
-            note: '場所：特典会エリアA',
-          ),
-        ],
-        visibility: EventVisibility.shared,
-      );
+    title: 'IDOL CROSSING',
+    date: DateTime(2026, 9, 21),
+    venue: 'Spotify O-EAST',
+    openTime: const TimeOfDay(hour: 16, minute: 0),
+    startTime: const TimeOfDay(hour: 16, minute: 30),
+    performers: const ['AQUA PLANET', 'MOONLiGHT', 'Stella!'],
+    timetable: const [
+      EventScheduleEntry(
+        title: 'AQUA PLANET',
+        startTime: TimeOfDay(hour: 17, minute: 10),
+        endTime: TimeOfDay(hour: 17, minute: 30),
+      ),
+      EventScheduleEntry(
+        title: 'Stella!',
+        startTime: TimeOfDay(hour: 17, minute: 40),
+        endTime: TimeOfDay(hour: 18, minute: 0),
+      ),
+      EventScheduleEntry(
+        title: 'MOONLiGHT',
+        startTime: TimeOfDay(hour: 18, minute: 15),
+        endTime: TimeOfDay(hour: 18, minute: 35),
+      ),
+    ],
+    primaryGroup: 'AQUA PLANET',
+    wantedGroups: const ['AQUA PLANET', 'MOONLiGHT'],
+    mySchedule: const [
+      EventScheduleEntry(
+        title: 'AQUA PLANET',
+        startTime: TimeOfDay(hour: 19, minute: 30),
+        endTime: TimeOfDay(hour: 20, minute: 30),
+        label: '特典会',
+        note: '場所：特典会エリアA',
+      ),
+    ],
+    visibility: EventVisibility.shared,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -345,7 +349,10 @@ class OcrEventScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: const Color(0xFFE8E0F7), width: 1.5),
+                  border: Border.all(
+                    color: const Color(0xFFE8E0F7),
+                    width: 1.5,
+                  ),
                 ),
                 child: const Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -405,10 +412,7 @@ class _CompactTimeResult {
 }
 
 class ManualEventScreen extends StatefulWidget {
-  const ManualEventScreen({
-    super.key,
-    this.initialEvent,
-  });
+  const ManualEventScreen({super.key, this.initialEvent});
 
   final OshiEvent? initialEvent;
 
@@ -425,6 +429,15 @@ class _ManualEventScreenState extends State<ManualEventScreen> {
   final _venueController = TextEditingController();
   final _performersController = TextEditingController();
   final _primaryController = TextEditingController();
+  final _url = TextEditingController();
+  final _memo = TextEditingController();
+  final _drinkAmount = TextEditingController();
+  final _drinkMemo = TextEditingController();
+  String? _flyer;
+  bool _drinkRequired = false;
+  bool _drinkMandatory = true;
+  bool _drinkIncluded = false;
+  List<EventScheduleEntry> _schedule = [];
 
   EventVisibility _visibility = EventVisibility.shared;
   OshiEventType _eventType = OshiEventType.taiban;
@@ -446,6 +459,15 @@ class _ManualEventScreenState extends State<ManualEventScreen> {
     _venueController.text = initial.venue;
     _performersController.text = initial.performers.join('、');
     _primaryController.text = initial.primaryGroup ?? '';
+    _url.text = initial.url;
+    _memo.text = initial.memo;
+    _drinkAmount.text = initial.drinkAmount?.toString() ?? '';
+    _drinkMemo.text = initial.drinkMemo;
+    _drinkRequired = initial.drinkRequired;
+    _drinkMandatory = initial.drinkMandatory;
+    _drinkIncluded = initial.drinkIncluded;
+    _flyer = initial.flyerBase64;
+    _schedule = List.of(initial.mySchedule);
     _visibility = initial.visibility;
     _eventType = initial.type;
     _date = initial.date;
@@ -460,6 +482,10 @@ class _ManualEventScreenState extends State<ManualEventScreen> {
     _venueController.dispose();
     _performersController.dispose();
     _primaryController.dispose();
+    _url.dispose();
+    _memo.dispose();
+    _drinkAmount.dispose();
+    _drinkMemo.dispose();
     super.dispose();
   }
 
@@ -525,9 +551,76 @@ class _ManualEventScreenState extends State<ManualEventScreen> {
               const SizedBox(height: 12),
               _field(_venueController, '会場（任意）', Icons.location_on_outlined),
               const SizedBox(height: 12),
-              _field(_performersController, '出演者（カンマ区切り）', Icons.groups_rounded),
+              _field(
+                _performersController,
+                '出演者（カンマ区切り）',
+                Icons.groups_rounded,
+              ),
               const SizedBox(height: 12),
-              _field(_primaryController, 'お目当てグループ（任意）', Icons.favorite_rounded),
+              _field(
+                _primaryController,
+                'お目当てグループ（任意）',
+                Icons.favorite_rounded,
+              ),
+              const SizedBox(height: 12),
+              _field(_url, 'イベントURL（任意）', Icons.link),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _pickFlyer,
+                icon: const Icon(Icons.image_outlined),
+                label: Text(_flyer == null ? 'フライヤーを選ぶ' : 'フライヤー選択済み・変更'),
+              ),
+              if (_flyer != null)
+                Image.memory(base64Decode(_flyer!), height: 120),
+              const SizedBox(height: 12),
+              _field(_memo, 'イベントメモ', Icons.note_alt_outlined),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      '当日のスケジュール',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: _addSchedule,
+                    icon: const Icon(Icons.add),
+                    label: const Text('時間＋内容を追加'),
+                  ),
+                ],
+              ),
+              for (var i = 0; i < _schedule.length; i++)
+                ListTile(
+                  title: Text(
+                    '${_timeText(_schedule[i].startTime)}  ${_schedule[i].title}',
+                  ),
+                  subtitle: Text(_schedule[i].label),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => setState(() => _schedule.removeAt(i)),
+                  ),
+                ),
+              const SizedBox(height: 16),
+              SwitchListTile(
+                title: const Text('ドリンク代あり'),
+                value: _drinkRequired,
+                onChanged: (v) => setState(() => _drinkRequired = v),
+              ),
+              if (_drinkRequired) ...[
+                _field(_drinkAmount, 'ドリンク代（金額）', Icons.currency_yen),
+                SwitchListTile(
+                  title: const Text('必須'),
+                  value: _drinkMandatory,
+                  onChanged: (v) => setState(() => _drinkMandatory = v),
+                ),
+                SwitchListTile(
+                  title: const Text('チケット代に含む'),
+                  value: _drinkIncluded,
+                  onChanged: (v) => setState(() => _drinkIncluded = v),
+                ),
+                _field(_drinkMemo, 'ドリンク代メモ', Icons.edit_note),
+              ],
               const SizedBox(height: 20),
               const Text(
                 '公開範囲',
@@ -538,7 +631,11 @@ class _ManualEventScreenState extends State<ManualEventScreen> {
               const SizedBox(height: 6),
               const Text(
                 '※ お目当て・見たい・支出・チェキ・トークログ・メモなどの個人記録は、どの設定でも共有されません。',
-                style: TextStyle(fontSize: 12, color: Color(0xFF716B78), height: 1.45),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF716B78),
+                  height: 1.45,
+                ),
               ),
               const SizedBox(height: 24),
               FilledButton(
@@ -554,6 +651,81 @@ class _ManualEventScreenState extends State<ManualEventScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _pickFlyer() async {
+    final photo = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 55,
+      maxWidth: 900,
+    );
+    if (photo == null) return;
+    final encoded = base64Encode(await photo.readAsBytes());
+    if (mounted) setState(() => _flyer = encoded);
+  }
+
+  Future<void> _addSchedule() async {
+    final content = TextEditingController();
+    var time = const TimeOfDay(hour: 18, minute: 0);
+    var label = 'ライブ';
+    final entry = await showDialog<EventScheduleEntry>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, update) => AlertDialog(
+          title: const Text('予定を追加'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: content,
+                decoration: const InputDecoration(labelText: '内容'),
+              ),
+              ListTile(
+                title: Text('時刻 ${_timeText(time)}'),
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: ctx,
+                    initialTime: time,
+                  );
+                  if (picked != null) update(() => time = picked);
+                },
+              ),
+              DropdownButton<String>(
+                value: label,
+                isExpanded: true,
+                items: ['ライブ', '整列', 'OPEN', '物販', '特典会', 'ステージ', 'ブース', 'その他']
+                    .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                    .toList(),
+                onChanged: (v) => update(() => label = v ?? label),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (content.text.trim().isNotEmpty) {
+                  Navigator.pop(
+                    ctx,
+                    EventScheduleEntry(
+                      title: content.text.trim(),
+                      startTime: time,
+                      label: label,
+                    ),
+                  );
+                }
+              },
+              child: const Text('追加'),
+            ),
+          ],
+        ),
+      ),
+    );
+    content.dispose();
+    if (entry != null && mounted) setState(() => _schedule.add(entry));
   }
 
   Widget _field(TextEditingController controller, String label, IconData icon) {
@@ -600,10 +772,16 @@ class _ManualEventScreenState extends State<ManualEventScreen> {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(fontSize: 11, color: Color(0xFF716B78)),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF716B78),
+                      ),
                     ),
                     const SizedBox(height: 2),
-                    Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
+                    Text(
+                      value,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
                   ],
                 ),
               ),
@@ -665,9 +843,7 @@ class _ManualEventScreenState extends State<ManualEventScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: selected ? purple : const Color(0xFFE8E0F7),
-        ),
+        side: BorderSide(color: selected ? purple : const Color(0xFFE8E0F7)),
       ),
       child: RadioListTile<EventVisibility>(
         value: value,
@@ -677,7 +853,10 @@ class _ManualEventScreenState extends State<ManualEventScreen> {
           children: [
             Icon(value.icon, color: purple, size: 20),
             const SizedBox(width: 8),
-            Text(value.label, style: const TextStyle(fontWeight: FontWeight.w800)),
+            Text(
+              value.label,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
           ],
         ),
         subtitle: Padding(
@@ -750,7 +929,10 @@ class _ManualEventScreenState extends State<ManualEventScreen> {
                       padding: EdgeInsets.symmetric(horizontal: 10),
                       child: Text(
                         ':',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                     Expanded(
@@ -760,16 +942,13 @@ class _ManualEventScreenState extends State<ManualEventScreen> {
                           labelText: '分',
                           border: OutlineInputBorder(),
                         ),
-                        items: List.generate(
-                          12,
-                          (index) {
-                            final minute = index * 5;
-                            return DropdownMenuItem(
-                              value: minute,
-                              child: Text(minute.toString().padLeft(2, '0')),
-                            );
-                          },
-                        ),
+                        items: List.generate(12, (index) {
+                          final minute = index * 5;
+                          return DropdownMenuItem(
+                            value: minute,
+                            child: Text(minute.toString().padLeft(2, '0')),
+                          );
+                        }),
                         onChanged: (value) {
                           if (value == null) return;
                           setDialogState(() => selectedMinute = value);
@@ -781,9 +960,9 @@ class _ManualEventScreenState extends State<ManualEventScreen> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(
-                    const _CompactTimeResult.clear(),
-                  ),
+                  onPressed: () =>
+                      Navigator.of(dialogContext)
+                          .pop(const _CompactTimeResult.clear()),
                   child: const Text('未設定'),
                 ),
                 TextButton(
@@ -872,7 +1051,15 @@ class _ManualEventScreenState extends State<ManualEventScreen> {
       timetable: initial?.timetable ?? const [],
       primaryGroup: primary.isEmpty ? null : primary,
       wantedGroups: wantedGroups,
-      mySchedule: initial?.mySchedule ?? const [],
+      mySchedule: _schedule,
+      url: _url.text.trim(),
+      flyerBase64: _flyer,
+      memo: _memo.text.trim(),
+      drinkRequired: _drinkRequired,
+      drinkAmount: int.tryParse(_drinkAmount.text.replaceAll(',', '').trim()),
+      drinkMandatory: _drinkMandatory,
+      drinkIncluded: _drinkIncluded,
+      drinkMemo: _drinkMemo.text.trim(),
       ticketStatus: initial?.ticketStatus ?? '未設定',
       ticketAmount: initial?.ticketAmount,
       visibility: _visibility,

@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+
 import '../models/activity_models.dart';
 import '../models/oshi.dart';
 import '../models/oshi_event.dart';
@@ -20,10 +23,8 @@ class EventDetailScreen extends StatefulWidget {
   final OshiEvent event;
   final List<Oshi> oshis;
   final Future<void> Function() onActivityChanged;
-  final Future<void> Function(
-    OshiEvent originalEvent,
-    OshiEvent updatedEvent,
-  ) onUpdateEvent;
+  final Future<void> Function(OshiEvent originalEvent, OshiEvent updatedEvent)
+  onUpdateEvent;
   final Future<void> Function(OshiEvent event) onDeleteEvent;
   final VoidCallback onBackToEventList;
 
@@ -116,7 +117,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return _event.mySchedule.where((entry) => entry.title == primary).toList();
   }
 
-
   Future<void> _editEvent() async {
     final updatedEvent = await Navigator.of(context).push<OshiEvent>(
       MaterialPageRoute(
@@ -135,9 +135,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       _event = updatedEvent;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('イベントを更新しました')),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('イベントを更新しました')));
   }
 
   Future<void> _confirmDelete() async {
@@ -145,9 +144,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('イベントを削除しますか？'),
-        content: Text(
-          '「${_event.title}」を削除します。\nこの操作は元に戻せません。',
-        ),
+        content: Text('「${_event.title}」を削除します。\nこの操作は元に戻せません。'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -188,57 +185,57 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             icon: const Icon(Icons.arrow_back_rounded),
           ),
           title: const Text(
-          'イベント詳細',
-          style: TextStyle(fontWeight: FontWeight.w800),
-        ),
-        actions: [
-          TextButton.icon(
-            onPressed: _editEvent,
-            icon: const Icon(Icons.edit_rounded, size: 18),
-            label: const Text('編集'),
+            'イベント詳細',
+            style: TextStyle(fontWeight: FontWeight.w800),
           ),
-          PopupMenuButton<String>(
-            tooltip: 'イベントメニュー',
-            icon: const Icon(Icons.more_horiz_rounded),
-            onSelected: (value) {
-              if (value == 'delete') {
-                _confirmDelete();
-              }
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem<String>(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_outline_rounded, color: Colors.red),
-                    SizedBox(width: 10),
-                    Text('イベントを削除'),
-                  ],
+          actions: [
+            TextButton.icon(
+              onPressed: _editEvent,
+              icon: const Icon(Icons.edit_rounded, size: 18),
+              label: const Text('編集'),
+            ),
+            PopupMenuButton<String>(
+              tooltip: 'イベントメニュー',
+              icon: const Icon(Icons.more_horiz_rounded),
+              onSelected: (value) {
+                if (value == 'delete') {
+                  _confirmDelete();
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline_rounded, color: Colors.red),
+                      SizedBox(width: 10),
+                      Text('イベントを削除'),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 430),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
-            children: [
-              _summaryCard(),
-              const SizedBox(height: 14),
-              _sharedInfoCard(context),
-              const SizedBox(height: 14),
-              _myPlanCard(context),
-              const SizedBox(height: 14),
-              _eventHubCard(),
-              const SizedBox(height: 14),
-              _recordActions(),
-            ],
+              ],
+            ),
+          ],
+        ),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 430),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+              children: [
+                _summaryCard(),
+                const SizedBox(height: 14),
+                _sharedInfoCard(context),
+                const SizedBox(height: 14),
+                _myPlanCard(context),
+                const SizedBox(height: 14),
+                _eventHubCard(),
+                const SizedBox(height: 14),
+                _recordActions(),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -263,14 +260,20 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: lightPurple,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   _event.type.label,
-                  style: const TextStyle(color: purple, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    color: purple,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               const Spacer(),
@@ -278,7 +281,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               const SizedBox(width: 4),
               Text(
                 _event.visibility.label,
-                style: const TextStyle(color: purple, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  color: purple,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
@@ -290,7 +296,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           const SizedBox(height: 12),
           _iconLine(Icons.calendar_month_rounded, _dateText(_event.date)),
           const SizedBox(height: 8),
-          _iconLine(Icons.location_on_outlined, _event.venue.isEmpty ? '会場未定' : _event.venue),
+          _iconLine(
+            Icons.location_on_outlined,
+            _event.venue.isEmpty ? '会場未定' : _event.venue,
+          ),
           const SizedBox(height: 8),
           _iconLine(
             Icons.schedule_rounded,
@@ -309,12 +318,59 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         _detailRow('イベント名', _event.title),
         _detailRow('日付', _dateText(_event.date)),
         _detailRow('会場', _event.venue.isEmpty ? '未定' : _event.venue),
-        _detailRow('出演者', _event.performers.isEmpty ? '未登録' : '${_event.performers.length}組'),
+        _detailRow(
+          '出演者',
+          _event.performers.isEmpty ? '未登録' : '${_event.performers.length}組',
+        ),
+        if (_event.url.isNotEmpty) _detailRow('URL', _event.url),
+        if (_event.memo.isNotEmpty) _detailRow('メモ', _event.memo),
+        if (_event.flyerBase64 != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Image.memory(base64Decode(_event.flyerBase64!), height: 150),
+          ),
+        if (_event.mySchedule.isNotEmpty) ...[
+          const Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: Text(
+              '当日のスケジュール',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          for (final entry in _event.mySchedule)
+            _detailRow(
+              _timeText(entry.startTime),
+              '${entry.title}（${entry.label}）',
+            ),
+        ],
+        if (_event.drinkRequired) ...[
+          const SizedBox(height: 12),
+          _detailRow(
+            'ドリンク代',
+            '${_event.drinkAmount ?? 0}円・${_event.drinkMandatory ? '必須' : '任意'}・${_event.drinkIncluded ? 'チケット込み' : '当日支払'}',
+          ),
+          if (_event.drinkMemo.isNotEmpty)
+            _detailRow('ドリンクメモ', _event.drinkMemo),
+          if (!_event.drinkIncluded && (_event.drinkAmount ?? 0) > 0)
+            TextButton.icon(
+              onPressed: _recordDrink,
+              icon: const Icon(Icons.account_balance_wallet_outlined),
+              label: Text(
+                _transactions.any(
+                      (t) => t.sourceType == 'drink' && t.sourceId == _event.id,
+                    )
+                    ? 'ドリンク代は支出に登録済み'
+                    : '支払ったドリンク代を支出に登録',
+              ),
+            ),
+        ],
         const SizedBox(height: 8),
         _linkTile(
           icon: Icons.view_timeline_rounded,
           title: '全体タイムテーブル',
-          subtitle: _event.timetable.isEmpty ? '未登録' : '${_event.timetable.length}組の出演時間を確認',
+          subtitle: _event.timetable.isEmpty
+              ? '未登録'
+              : '${_event.timetable.length}組の出演時間を確認',
           onTap: () => _showFullTimetable(context),
         ),
         const SizedBox(height: 8),
@@ -349,12 +405,19 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             children: [
               const Text(
                 'お目当て',
-                style: TextStyle(fontSize: 12, color: Color(0xFF716B78), fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF716B78),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 primary,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               const SizedBox(height: 9),
               Row(
@@ -362,8 +425,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   const Icon(Icons.music_note_rounded, color: purple, size: 20),
                   const SizedBox(width: 7),
                   Text(
-                    primaryLive == null ? '出演時間 未登録' : '出演 ${_scheduleTime(primaryLive)}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                    primaryLive == null
+                        ? '出演時間 未登録'
+                        : '出演 ${_scheduleTime(primaryLive)}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ],
               ),
@@ -374,32 +442,44 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   style: TextStyle(fontSize: 12, color: Color(0xFF716B78)),
                 ),
               ],
-              ...primaryExtras.map((entry) => Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.auto_awesome_rounded, color: purple, size: 20),
-                        const SizedBox(width: 7),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${entry.label} ${_scheduleTime(entry)}',
-                                style: const TextStyle(fontWeight: FontWeight.w800),
+              ...primaryExtras.map(
+                (entry) => Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.auto_awesome_rounded,
+                        color: purple,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 7),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${entry.label} ${_scheduleTime(entry)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
                               ),
-                              if (entry.note != null && entry.note!.trim().isNotEmpty)
-                                Text(
-                                  entry.note!,
-                                  style: const TextStyle(fontSize: 12, color: Color(0xFF716B78)),
+                            ),
+                            if (entry.note != null &&
+                                entry.note!.trim().isNotEmpty)
+                              Text(
+                                entry.note!,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF716B78),
                                 ),
-                            ],
-                          ),
+                              ),
+                          ],
                         ),
-                      ],
-                    ),
-                  )),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -407,7 +487,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         _linkTile(
           icon: Icons.visibility_rounded,
           title: '見たいグループ',
-          subtitle: _event.wantedGroups.isEmpty ? '未設定' : '${_event.wantedGroups.length}組を登録中',
+          subtitle: _event.wantedGroups.isEmpty
+              ? '未設定'
+              : '${_event.wantedGroups.length}組を登録中',
           onTap: () => _showWantedGroups(context),
         ),
         const SizedBox(height: 6),
@@ -422,7 +504,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         const SizedBox(height: 8),
         const Text(
           '※ お目当て・見たい・支出・チェキ・トークログ・メモなどの個人記録は共有されません。',
-          style: TextStyle(fontSize: 12, color: Color(0xFF6B6674), height: 1.45),
+          style: TextStyle(
+            fontSize: 12,
+            color: Color(0xFF6B6674),
+            height: 1.45,
+          ),
         ),
       ],
     );
@@ -445,7 +531,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   void _showWantedGroups(BuildContext context) {
     final entries = <EventScheduleEntry>[];
     for (final group in _event.wantedGroups) {
-      final matches = _event.timetable.where((entry) => entry.title == group).toList();
+      final matches = _event.timetable
+          .where((entry) => entry.title == group)
+          .toList();
       if (matches.isEmpty) {
         entries.add(EventScheduleEntry(title: group));
       } else {
@@ -497,51 +585,83 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
               const SizedBox(height: 14),
               if (entries.isEmpty)
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Text(emptyText),
                 )
               else
-                ...entries.map((entry) => Container(
-                      margin: const EdgeInsets.only(bottom: 9),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE8E0F7)),
-                      ),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 92,
-                            child: Text(
-                              entry.startTime == null ? '時間未登録' : _scheduleTime(entry),
-                              style: const TextStyle(color: purple, fontWeight: FontWeight.w900),
+                ...entries.map(
+                  (entry) => Container(
+                    margin: const EdgeInsets.only(bottom: 9),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE8E0F7)),
+                    ),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 92,
+                          child: Text(
+                            entry.startTime == null
+                                ? '時間未登録'
+                                : _scheduleTime(entry),
+                            style: const TextStyle(
+                              color: purple,
+                              fontWeight: FontWeight.w900,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(entry.title, style: const TextStyle(fontWeight: FontWeight.w900)),
-                                if (entry.stage != null && entry.stage!.trim().isNotEmpty)
-                                  Text(
-                                    entry.stage!,
-                                    style: const TextStyle(fontSize: 12, color: purple, fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                entry.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              if (entry.stage != null &&
+                                  entry.stage!.trim().isNotEmpty)
+                                Text(
+                                  entry.stage!,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: purple,
+                                    fontWeight: FontWeight.w700,
                                   ),
-                                if (entry.label != 'ライブ')
-                                  Text(entry.label, style: const TextStyle(fontSize: 12, color: Color(0xFF716B78))),
-                              ],
-                            ),
+                                ),
+                              if (entry.label != 'ライブ')
+                                Text(
+                                  entry.label,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF716B78),
+                                  ),
+                                ),
+                            ],
                           ),
-                        ],
-                      ),
-                    )),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
         );
@@ -559,13 +679,26 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('公開範囲：${_event.visibility.label}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+              Text(
+                '公開範囲：${_event.visibility.label}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
               const SizedBox(height: 10),
-              Text(_event.visibility.description, style: const TextStyle(height: 1.5)),
+              Text(
+                _event.visibility.description,
+                style: const TextStyle(height: 1.5),
+              ),
               const SizedBox(height: 12),
               const Text(
                 'お目当て・見たい・支出・チェキ・トークログ・メモなどの個人記録は共有されません。',
-                style: TextStyle(fontSize: 12.5, color: Color(0xFF716B78), height: 1.45),
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: Color(0xFF716B78),
+                  height: 1.45,
+                ),
               ),
             ],
           ),
@@ -596,9 +729,18 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
                     const SizedBox(height: 2),
-                    Text(subtitle, style: const TextStyle(fontSize: 12, color: Color(0xFF716B78))),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF716B78),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -625,17 +767,37 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       children: [
         Row(
           children: [
-            _miniStat(Icons.confirmation_number_outlined, 'チケット', '${_tickets.length}枚', onTap: _openTickets),
+            _miniStat(
+              Icons.confirmation_number_outlined,
+              'チケット',
+              '${_tickets.length}枚',
+              onTap: _openTickets,
+            ),
             const SizedBox(width: 8),
-            _miniStat(Icons.camera_alt_outlined, 'チェキ', '${_chekis.length}枚', onTap: _openChekis),
+            _miniStat(
+              Icons.camera_alt_outlined,
+              'チェキ',
+              '${_chekis.length}枚',
+              onTap: _openChekis,
+            ),
           ],
         ),
         const SizedBox(height: 8),
         Row(
           children: [
-            _miniStat(Icons.forum_outlined, 'トーク', '${_talks.length}回', onTap: _openTalks),
+            _miniStat(
+              Icons.forum_outlined,
+              'トーク',
+              '${_talks.length}回',
+              onTap: _openTalks,
+            ),
             const SizedBox(width: 8),
-            _miniStat(Icons.currency_yen_rounded, '支出', _moneyText(net), onTap: _openTransactions),
+            _miniStat(
+              Icons.currency_yen_rounded,
+              '支出',
+              _moneyText(net),
+              onTap: _openTransactions,
+            ),
           ],
         ),
         if (_event.type == OshiEventType.festival) ...[
@@ -687,11 +849,20 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               children: [
                 Icon(icon, color: purple, size: 20),
                 const SizedBox(height: 4),
-                Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF716B78))),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF716B78),
+                  ),
+                ),
                 const SizedBox(height: 2),
                 FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Text(value, style: const TextStyle(fontWeight: FontWeight.w900)),
+                  child: Text(
+                    value,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
                 ),
               ],
             ),
@@ -715,10 +886,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     await Navigator.of(context).push(
       MaterialPageRoute(
         settings: const RouteSettings(name: 'event_tickets'),
-        builder: (_) => EventTicketsScreen(
-          event: _event,
-          onChanged: _activityChanged,
-        ),
+        builder: (_) =>
+            EventTicketsScreen(event: _event, onChanged: _activityChanged),
       ),
     );
     await _reloadActivity();
@@ -736,6 +905,26 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       ),
     );
     await _reloadActivity();
+  }
+
+  Future<void> _recordDrink() async {
+    if (_transactions.any(
+      (t) => t.sourceType == 'drink' && t.sourceId == _event.id,
+    ))
+      return;
+    await ActivityStorage.saveTransaction(
+      OshiTransaction(
+        amount: _event.drinkAmount!,
+        type: TransactionType.expense,
+        date: DateTime.now(),
+        category: TransactionCategory.food,
+        eventId: _event.id,
+        memo: 'ドリンク代 ${_event.drinkMemo}',
+        sourceType: 'drink',
+        sourceId: _event.id,
+      ),
+    );
+    await _activityChanged();
   }
 
   Future<void> _openTalks() async {
@@ -810,7 +999,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       leading: Container(
         width: 42,
         height: 42,
-        decoration: BoxDecoration(color: lightPurple, borderRadius: BorderRadius.circular(13)),
+        decoration: BoxDecoration(
+          color: lightPurple,
+          borderRadius: BorderRadius.circular(13),
+        ),
         child: Icon(icon, color: purple),
       ),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
@@ -839,7 +1031,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             children: [
               Icon(icon, color: purple),
               const SizedBox(width: 8),
-              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -859,10 +1057,18 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             width: 82,
             child: Text(
               label,
-              style: const TextStyle(color: Color(0xFF716B78), fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Color(0xFF716B78),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-          Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w700))),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
         ],
       ),
     );

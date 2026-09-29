@@ -3,14 +3,7 @@ import 'dart:convert';
 String newActivityId(String prefix) =>
     '${prefix}_${DateTime.now().microsecondsSinceEpoch}';
 
-enum TicketStatus {
-  unset,
-  applying,
-  wonUnpaid,
-  paid,
-  lost,
-  refunded,
-}
+enum TicketStatus { unset, applying, wonUnpaid, paid, lost, refunded }
 
 extension TicketStatusX on TicketStatus {
   String get label {
@@ -43,9 +36,9 @@ class TicketRecord {
     this.url = '',
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : id = id ?? newActivityId('ticket'),
-        createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+  }) : id = id ?? newActivityId('ticket'),
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   final String id;
   final String eventId;
@@ -59,46 +52,69 @@ class TicketRecord {
   DateTime updatedAt;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'eventId': eventId,
-        'status': status.name,
-        'amount': amount,
-        'serialNumber': serialNumber,
-        'paymentDeadline': paymentDeadline?.toIso8601String(),
-        'memo': memo,
-        'url': url,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'eventId': eventId,
+    'status': status.name,
+    'amount': amount,
+    'serialNumber': serialNumber,
+    'paymentDeadline': paymentDeadline?.toIso8601String(),
+    'memo': memo,
+    'url': url,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
   factory TicketRecord.fromJson(Map<String, dynamic> json) => TicketRecord(
-        id: json['id'] as String?,
-        eventId: json['eventId'] as String? ?? '',
-        status: TicketStatus.values.firstWhere(
-          (value) => value.name == json['status'],
-          orElse: () => TicketStatus.unset,
-        ),
-        amount: (json['amount'] as num?)?.toInt(),
-        serialNumber: json['serialNumber'] as String? ?? '',
-        paymentDeadline: DateTime.tryParse(
-          json['paymentDeadline'] as String? ?? '',
-        ),
-        memo: json['memo'] as String? ?? '',
-        url: json['url'] as String? ?? '',
-        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
-        updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
-      );
+    id: json['id'] as String?,
+    eventId: json['eventId'] as String? ?? '',
+    status: TicketStatus.values.firstWhere(
+      (value) => value.name == json['status'],
+      orElse: () => TicketStatus.unset,
+    ),
+    amount: (json['amount'] as num?)?.toInt(),
+    serialNumber: json['serialNumber'] as String? ?? '',
+    paymentDeadline: DateTime.tryParse(
+      json['paymentDeadline'] as String? ?? '',
+    ),
+    memo: json['memo'] as String? ?? '',
+    url: json['url'] as String? ?? '',
+    createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+    updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
+  );
 }
 
-enum ChekiType { solo, twoShot, group, other }
+enum ChekiType {
+  solo,
+  soloSigned,
+  soloTalk,
+  twoShot,
+  twoShotSigned,
+  twoShotTalk,
+  signTicket,
+  talkTicket,
+  group,
+  other,
+}
 
 extension ChekiTypeX on ChekiType {
   String get label {
     switch (this) {
       case ChekiType.solo:
-        return 'ソロ';
+        return 'ソロ（サインなし）';
+      case ChekiType.soloSigned:
+        return 'ソロ（サインあり）';
+      case ChekiType.soloTalk:
+        return 'ソロ（トークあり）';
       case ChekiType.twoShot:
-        return '2ショット';
+        return '2S（サインなし）';
+      case ChekiType.twoShotSigned:
+        return '2S（サインあり）';
+      case ChekiType.twoShotTalk:
+        return '2S（トークあり）';
+      case ChekiType.signTicket:
+        return 'サイン券';
+      case ChekiType.talkTicket:
+        return 'トーク券';
       case ChekiType.group:
         return '複数人';
       case ChekiType.other:
@@ -115,8 +131,8 @@ class ChekiSourcePhoto {
     this.detectedCount,
     this.isSplit = false,
     DateTime? createdAt,
-  })  : id = id ?? newActivityId('cheki_source'),
-        createdAt = createdAt ?? DateTime.now();
+  }) : id = id ?? newActivityId('cheki_source'),
+       createdAt = createdAt ?? DateTime.now();
 
   final String id;
   final String eventId;
@@ -126,13 +142,13 @@ class ChekiSourcePhoto {
   final DateTime createdAt;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'eventId': eventId,
-        'imageBase64': imageBase64,
-        'detectedCount': detectedCount,
-        'isSplit': isSplit,
-        'createdAt': createdAt.toIso8601String(),
-      };
+    'id': id,
+    'eventId': eventId,
+    'imageBase64': imageBase64,
+    'detectedCount': detectedCount,
+    'isSplit': isSplit,
+    'createdAt': createdAt.toIso8601String(),
+  };
 
   factory ChekiSourcePhoto.fromJson(Map<String, dynamic> json) =>
       ChekiSourcePhoto(
@@ -155,9 +171,9 @@ class ChekiPurchase {
     this.sourcePhotoId,
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : id = id ?? newActivityId('cheki_purchase'),
-        createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+  }) : id = id ?? newActivityId('cheki_purchase'),
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   final String id;
   final String eventId;
@@ -174,26 +190,26 @@ class ChekiPurchase {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'eventId': eventId,
-        'quantity': quantity,
-        'totalAmount': totalAmount,
-        'purchasedAt': purchasedAt?.toIso8601String(),
-        'sourcePhotoId': sourcePhotoId,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'eventId': eventId,
+    'quantity': quantity,
+    'totalAmount': totalAmount,
+    'purchasedAt': purchasedAt?.toIso8601String(),
+    'sourcePhotoId': sourcePhotoId,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
   factory ChekiPurchase.fromJson(Map<String, dynamic> json) => ChekiPurchase(
-        id: json['id'] as String?,
-        eventId: json['eventId'] as String? ?? '',
-        quantity: (json['quantity'] as num?)?.toInt() ?? 1,
-        totalAmount: (json['totalAmount'] as num?)?.toInt(),
-        purchasedAt: DateTime.tryParse(json['purchasedAt'] as String? ?? ''),
-        sourcePhotoId: json['sourcePhotoId'] as String?,
-        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
-        updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
-      );
+    id: json['id'] as String?,
+    eventId: json['eventId'] as String? ?? '',
+    quantity: (json['quantity'] as num?)?.toInt() ?? 1,
+    totalAmount: (json['totalAmount'] as num?)?.toInt(),
+    purchasedAt: DateTime.tryParse(json['purchasedAt'] as String? ?? ''),
+    sourcePhotoId: json['sourcePhotoId'] as String?,
+    createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+    updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
+  );
 }
 
 class ChekiRecord {
@@ -206,16 +222,17 @@ class ChekiRecord {
     List<String>? memberNames,
     this.type = ChekiType.twoShot,
     this.imageBase64,
+    this.amount,
     this.memo = '',
     this.isFavorite = false,
     List<String>? talkLogIds,
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : id = id ?? newActivityId('cheki'),
-        memberNames = memberNames ?? <String>[],
-        talkLogIds = talkLogIds ?? <String>[],
-        createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+  }) : id = id ?? newActivityId('cheki'),
+       memberNames = memberNames ?? <String>[],
+       talkLogIds = talkLogIds ?? <String>[],
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   final String id;
   final String eventId;
@@ -225,6 +242,7 @@ class ChekiRecord {
   List<String> memberNames;
   ChekiType type;
   String? imageBase64;
+  int? amount;
   String memo;
   bool isFavorite;
   List<String> talkLogIds;
@@ -232,40 +250,44 @@ class ChekiRecord {
   DateTime updatedAt;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'eventId': eventId,
-        'purchaseId': purchaseId,
-        'sourcePhotoId': sourcePhotoId,
-        'shotAt': shotAt?.toIso8601String(),
-        'memberNames': memberNames,
-        'type': type.name,
-        'imageBase64': imageBase64,
-        'memo': memo,
-        'isFavorite': isFavorite,
-        'talkLogIds': talkLogIds,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'eventId': eventId,
+    'purchaseId': purchaseId,
+    'sourcePhotoId': sourcePhotoId,
+    'shotAt': shotAt?.toIso8601String(),
+    'memberNames': memberNames,
+    'type': type.name,
+    'imageBase64': imageBase64,
+    'amount': amount,
+    'memo': memo,
+    'isFavorite': isFavorite,
+    'talkLogIds': talkLogIds,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
   factory ChekiRecord.fromJson(Map<String, dynamic> json) => ChekiRecord(
-        id: json['id'] as String?,
-        eventId: json['eventId'] as String? ?? '',
-        purchaseId: json['purchaseId'] as String? ?? '',
-        sourcePhotoId: json['sourcePhotoId'] as String?,
-        shotAt: DateTime.tryParse(json['shotAt'] as String? ?? ''),
-        memberNames: _stringList(json['memberNames']),
-        type: ChekiType.values.firstWhere(
-          (value) => value.name == json['type'],
-          orElse: () => ChekiType.twoShot,
-        ),
-        imageBase64: json['imageBase64'] as String?,
-        memo: json['memo'] as String? ?? '',
-        isFavorite: json['isFavorite'] as bool? ?? false,
-        talkLogIds: _stringList(json['talkLogIds']),
-        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
-        updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
-      );
+    id: json['id'] as String?,
+    eventId: json['eventId'] as String? ?? '',
+    purchaseId: json['purchaseId'] as String? ?? '',
+    sourcePhotoId: json['sourcePhotoId'] as String?,
+    shotAt: DateTime.tryParse(json['shotAt'] as String? ?? ''),
+    memberNames: _stringList(json['memberNames']),
+    type: ChekiType.values.firstWhere(
+      (value) => value.name == json['type'],
+      orElse: () => ChekiType.twoShot,
+    ),
+    imageBase64: json['imageBase64'] as String?,
+    amount: (json['amount'] as num?)?.toInt(),
+    memo: json['memo'] as String? ?? '',
+    isFavorite: json['isFavorite'] as bool? ?? false,
+    talkLogIds: _stringList(json['talkLogIds']),
+    createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+    updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
+  );
 }
+
+enum TalkEntryKind { self, member, action, thought, system }
 
 class TalkMessage {
   TalkMessage({
@@ -273,61 +295,74 @@ class TalkMessage {
     required this.speaker,
     required this.text,
     required this.order,
+    this.kind = TalkEntryKind.member,
     DateTime? createdAt,
-  })  : id = id ?? newActivityId('talk_message'),
-        createdAt = createdAt ?? DateTime.now();
+  }) : id = id ?? newActivityId('talk_message'),
+       createdAt = createdAt ?? DateTime.now();
 
   final String id;
   String speaker;
   String text;
   int order;
+  TalkEntryKind kind;
   final DateTime createdAt;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'speaker': speaker,
-        'text': text,
-        'order': order,
-        'createdAt': createdAt.toIso8601String(),
-      };
+    'id': id,
+    'speaker': speaker,
+    'text': text,
+    'order': order,
+    'kind': kind.name,
+    'createdAt': createdAt.toIso8601String(),
+  };
 
   factory TalkMessage.fromJson(Map<String, dynamic> json) => TalkMessage(
-        id: json['id'] as String?,
-        speaker: json['speaker'] as String? ?? '自分',
-        text: json['text'] as String? ?? '',
-        order: (json['order'] as num?)?.toInt() ?? 0,
-        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
-      );
+    id: json['id'] as String?,
+    speaker: json['speaker'] as String? ?? '自分',
+    text: json['text'] as String? ?? '',
+    order: (json['order'] as num?)?.toInt() ?? 0,
+    kind: TalkEntryKind.values.firstWhere(
+      (value) => value.name == json['kind'],
+      orElse: () =>
+          json['speaker'] == '自分' ? TalkEntryKind.self : TalkEntryKind.member,
+    ),
+    createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+  );
 }
 
 class TalkLog {
   TalkLog({
     String? id,
-    required this.eventId,
+    this.eventId = '',
+    this.eventName = '',
     List<String>? participantNames,
     DateTime? talkedAt,
     this.sessionLabel = '',
     this.ticketCount,
     List<String>? chekiIds,
+    List<String>? imagesBase64,
     this.memo = '',
     List<TalkMessage>? messages,
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : id = id ?? newActivityId('talk'),
-        participantNames = participantNames ?? <String>[],
-        talkedAt = talkedAt ?? DateTime.now(),
-        chekiIds = chekiIds ?? <String>[],
-        messages = messages ?? <TalkMessage>[],
-        createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+  }) : id = id ?? newActivityId('talk'),
+       participantNames = participantNames ?? <String>[],
+       talkedAt = talkedAt ?? DateTime.now(),
+       chekiIds = chekiIds ?? <String>[],
+       imagesBase64 = imagesBase64 ?? <String>[],
+       messages = messages ?? <TalkMessage>[],
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   final String id;
   final String eventId;
+  String eventName;
   List<String> participantNames;
   DateTime talkedAt;
   String sessionLabel;
   int? ticketCount;
   List<String> chekiIds;
+  List<String> imagesBase64;
   String memo;
   List<TalkMessage> messages;
   final DateTime createdAt;
@@ -336,35 +371,37 @@ class TalkLog {
   int get messageCount => messages.length;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'eventId': eventId,
-        'participantNames': participantNames,
-        'talkedAt': talkedAt.toIso8601String(),
-        'sessionLabel': sessionLabel,
-        'ticketCount': ticketCount,
-        'chekiIds': chekiIds,
-        'memo': memo,
-        'messages': messages.map((e) => e.toJson()).toList(),
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'eventId': eventId,
+    'eventName': eventName,
+    'participantNames': participantNames,
+    'talkedAt': talkedAt.toIso8601String(),
+    'sessionLabel': sessionLabel,
+    'ticketCount': ticketCount,
+    'chekiIds': chekiIds,
+    'imagesBase64': imagesBase64,
+    'memo': memo,
+    'messages': messages.map((e) => e.toJson()).toList(),
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
   factory TalkLog.fromJson(Map<String, dynamic> json) => TalkLog(
-        id: json['id'] as String?,
-        eventId: json['eventId'] as String? ?? '',
-        participantNames: _stringList(json['participantNames']),
-        talkedAt:
-            DateTime.tryParse(json['talkedAt'] as String? ?? '') ?? DateTime.now(),
-        sessionLabel: json['sessionLabel'] as String? ?? '',
-        ticketCount: (json['ticketCount'] as num?)?.toInt(),
-        chekiIds: _stringList(json['chekiIds']),
-        memo: json['memo'] as String? ?? '',
-        messages: _mapList(json['messages'])
-            .map(TalkMessage.fromJson)
-            .toList(),
-        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
-        updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
-      );
+    id: json['id'] as String?,
+    eventId: json['eventId'] as String? ?? '',
+    eventName: json['eventName'] as String? ?? '',
+    participantNames: _stringList(json['participantNames']),
+    talkedAt:
+        DateTime.tryParse(json['talkedAt'] as String? ?? '') ?? DateTime.now(),
+    sessionLabel: json['sessionLabel'] as String? ?? '',
+    ticketCount: (json['ticketCount'] as num?)?.toInt(),
+    chekiIds: _stringList(json['chekiIds']),
+    imagesBase64: _stringList(json['imagesBase64']),
+    memo: json['memo'] as String? ?? '',
+    messages: _mapList(json['messages']).map(TalkMessage.fromJson).toList(),
+    createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+    updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
+  );
 }
 
 enum TransactionType { expense, income, refund, adjustment }
@@ -447,11 +484,11 @@ class OshiTransaction {
     this.sourceId,
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : id = id ?? newActivityId('txn'),
-        date = date ?? DateTime.now(),
-        memberNames = memberNames ?? <String>[],
-        createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+  }) : id = id ?? newActivityId('txn'),
+       date = date ?? DateTime.now(),
+       memberNames = memberNames ?? <String>[],
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   final String id;
   TransactionType type;
@@ -470,22 +507,23 @@ class OshiTransaction {
   int get signedAmount => amount * type.sign;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'type': type.name,
-        'amount': amount,
-        'date': date.toIso8601String(),
-        'category': category.name,
-        'paymentMethod': paymentMethod,
-        'eventId': eventId,
-        'memberNames': memberNames,
-        'memo': memo,
-        'sourceType': sourceType,
-        'sourceId': sourceId,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'type': type.name,
+    'amount': amount,
+    'date': date.toIso8601String(),
+    'category': category.name,
+    'paymentMethod': paymentMethod,
+    'eventId': eventId,
+    'memberNames': memberNames,
+    'memo': memo,
+    'sourceType': sourceType,
+    'sourceId': sourceId,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
-  factory OshiTransaction.fromJson(Map<String, dynamic> json) => OshiTransaction(
+  factory OshiTransaction.fromJson(Map<String, dynamic> json) =>
+      OshiTransaction(
         id: json['id'] as String?,
         type: TransactionType.values.firstWhere(
           (value) => value.name == json['type'],
@@ -507,7 +545,6 @@ class OshiTransaction {
         updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
       );
 }
-
 
 enum RecurringFrequency { monthly, yearly }
 
@@ -539,11 +576,11 @@ class RecurringTransaction {
     this.memo = '',
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : id = id ?? newActivityId('recurring'),
-        startDate = startDate ?? DateTime.now(),
-        memberNames = memberNames ?? <String>[],
-        createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+  }) : id = id ?? newActivityId('recurring'),
+       startDate = startDate ?? DateTime.now(),
+       memberNames = memberNames ?? <String>[],
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   final String id;
   String name;
@@ -569,22 +606,22 @@ class RecurringTransaction {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'type': type.name,
-        'amount': amount,
-        'category': category.name,
-        'frequency': frequency.name,
-        'dayOfMonth': dayOfMonth,
-        'monthOfYear': monthOfYear,
-        'startDate': startDate.toIso8601String(),
-        'endDate': endDate?.toIso8601String(),
-        'enabled': enabled,
-        'memberNames': memberNames,
-        'memo': memo,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'type': type.name,
+    'amount': amount,
+    'category': category.name,
+    'frequency': frequency.name,
+    'dayOfMonth': dayOfMonth,
+    'monthOfYear': monthOfYear,
+    'startDate': startDate.toIso8601String(),
+    'endDate': endDate?.toIso8601String(),
+    'enabled': enabled,
+    'memberNames': memberNames,
+    'memo': memo,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
   factory RecurringTransaction.fromJson(Map<String, dynamic> json) {
     final loadedType = TransactionType.values.firstWhere(

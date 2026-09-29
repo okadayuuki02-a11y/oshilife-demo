@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum EventVisibility {
-  shared,
-  limited,
-  private,
-}
+enum EventVisibility { shared, limited, private }
 
 extension EventVisibilityX on EventVisibility {
   String get label {
@@ -114,11 +110,19 @@ class OshiEvent {
     this.ticketStatus = '未設定',
     this.ticketAmount,
     this.visibility = EventVisibility.shared,
+    this.url = '',
+    this.flyerBase64,
+    this.memo = '',
+    this.drinkRequired = false,
+    this.drinkAmount,
+    this.drinkMandatory = true,
+    this.drinkIncluded = false,
+    this.drinkMemo = '',
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : id = id ?? 'event_${DateTime.now().microsecondsSinceEpoch}',
-        createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+  }) : id = id ?? 'event_${DateTime.now().microsecondsSinceEpoch}',
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   final String id;
   final String title;
@@ -145,6 +149,14 @@ class OshiEvent {
   final int? ticketAmount;
 
   final EventVisibility visibility;
+  final String url;
+  final String? flyerBase64;
+  final String memo;
+  final bool drinkRequired;
+  final int? drinkAmount;
+  final bool drinkMandatory;
+  final bool drinkIncluded;
+  final String drinkMemo;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -165,6 +177,14 @@ class OshiEvent {
     String? ticketStatus,
     int? ticketAmount,
     EventVisibility? visibility,
+    String? url,
+    String? flyerBase64,
+    String? memo,
+    bool? drinkRequired,
+    int? drinkAmount,
+    bool? drinkMandatory,
+    bool? drinkIncluded,
+    String? drinkMemo,
   }) {
     return OshiEvent(
       id: id ?? this.id,
@@ -183,6 +203,14 @@ class OshiEvent {
       ticketStatus: ticketStatus ?? this.ticketStatus,
       ticketAmount: ticketAmount ?? this.ticketAmount,
       visibility: visibility ?? this.visibility,
+      url: url ?? this.url,
+      flyerBase64: flyerBase64 ?? this.flyerBase64,
+      memo: memo ?? this.memo,
+      drinkRequired: drinkRequired ?? this.drinkRequired,
+      drinkAmount: drinkAmount ?? this.drinkAmount,
+      drinkMandatory: drinkMandatory ?? this.drinkMandatory,
+      drinkIncluded: drinkIncluded ?? this.drinkIncluded,
+      drinkMemo: drinkMemo ?? this.drinkMemo,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
     );
@@ -206,6 +234,14 @@ class OshiEvent {
       'ticketStatus': ticketStatus,
       'ticketAmount': ticketAmount,
       'visibility': visibility.name,
+      'url': url,
+      'flyerBase64': flyerBase64,
+      'memo': memo,
+      'drinkRequired': drinkRequired,
+      'drinkAmount': drinkAmount,
+      'drinkMandatory': drinkMandatory,
+      'drinkIncluded': drinkIncluded,
+      'drinkMemo': drinkMemo,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -231,6 +267,14 @@ class OshiEvent {
       mySchedule: _scheduleList(json['mySchedule']),
       ticketStatus: json['ticketStatus'] as String? ?? '未設定',
       ticketAmount: (json['ticketAmount'] as num?)?.toInt(),
+      url: json['url'] as String? ?? '',
+      flyerBase64: json['flyerBase64'] as String?,
+      memo: json['memo'] as String? ?? '',
+      drinkRequired: json['drinkRequired'] as bool? ?? false,
+      drinkAmount: (json['drinkAmount'] as num?)?.toInt(),
+      drinkMandatory: json['drinkMandatory'] as bool? ?? true,
+      drinkIncluded: json['drinkIncluded'] as bool? ?? false,
+      drinkMemo: json['drinkMemo'] as String? ?? '',
       visibility: EventVisibility.values.firstWhere(
         (value) => value.name == json['visibility'],
         orElse: () => EventVisibility.shared,
@@ -263,6 +307,9 @@ List<EventScheduleEntry> _scheduleList(dynamic value) {
   if (value is! List) return const [];
   return value
       .whereType<Map>()
-      .map((entry) => EventScheduleEntry.fromJson(Map<String, dynamic>.from(entry)))
+      .map(
+        (entry) =>
+            EventScheduleEntry.fromJson(Map<String, dynamic>.from(entry)),
+      )
       .toList();
 }

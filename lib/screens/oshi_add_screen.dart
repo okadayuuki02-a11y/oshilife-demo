@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/oshi.dart';
+import '../widgets/oshi_profile_fields.dart';
 import '../widgets/group_suggestion_field.dart';
 import '../widgets/member_color_picker.dart';
 import '../widgets/photo_crop_screen.dart';
@@ -51,6 +52,9 @@ class _OshiAddScreenState extends State<OshiAddScreen> {
 
   final _nameController = TextEditingController();
   final _songController = TextEditingController();
+  final _profileFields = {
+    for (final key in profileLabels.keys) key: TextEditingController(),
+  };
 
   late bool _isPrimary;
   String _groupName = '';
@@ -77,6 +81,9 @@ class _OshiAddScreenState extends State<OshiAddScreen> {
   void dispose() {
     _nameController.dispose();
     _songController.dispose();
+    for (final value in _profileFields.values) {
+      value.dispose();
+    }
     super.dispose();
   }
 
@@ -166,6 +173,19 @@ class _OshiAddScreenState extends State<OshiAddScreen> {
           ? 'まだ分からない'
           : _songController.text.trim(),
       memberColorHex: _memberColorHex,
+      furigana: _profileFields['furigana']!.text.trim(),
+      nickname: _profileFields['nickname']!.text.trim(),
+      birthday: DateTime.tryParse(_profileFields['birthday']!.text.trim()),
+      hometown: _profileFields['hometown']!.text.trim(),
+      height: _profileFields['height']!.text.trim(),
+      hobby: _profileFields['hobby']!.text.trim(),
+      skill: _profileFields['skill']!.text.trim(),
+      likes: _profileFields['likes']!.text.trim(),
+      officialUrl: _profileFields['officialUrl']!.text.trim(),
+      profile: _profileFields['profile']!.text.trim(),
+      personalNickname: _profileFields['personalNickname']!.text.trim(),
+      oshiReason: _profileFields['oshiReason']!.text.trim(),
+      personalMemo: _profileFields['personalMemo']!.text.trim(),
       profilePhotoBase64: photo,
       profilePhotoHistory: photo == null ? <String>[] : <String>[photo],
     );
@@ -264,7 +284,9 @@ class _OshiAddScreenState extends State<OshiAddScreen> {
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Icon(Icons.add_photo_alternate_outlined),
                           label: Text(
@@ -372,7 +394,10 @@ class _OshiAddScreenState extends State<OshiAddScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.calendar_month_rounded, color: purple),
+                          const Icon(
+                            Icons.calendar_month_rounded,
+                            color: purple,
+                          ),
                           const SizedBox(width: 14),
                           const Expanded(
                             child: Text(
@@ -423,6 +448,8 @@ class _OshiAddScreenState extends State<OshiAddScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 20),
+                  OshiProfileFields(controllers: _profileFields),
                   const SizedBox(height: 30),
                   FilledButton.icon(
                     onPressed: _save,
@@ -436,7 +463,10 @@ class _OshiAddScreenState extends State<OshiAddScreen> {
                     icon: const Icon(Icons.favorite_rounded),
                     label: const Text(
                       'この推しを登録',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -466,12 +496,10 @@ class WarekiDatePickerDialog extends StatefulWidget {
   });
 
   @override
-  State<WarekiDatePickerDialog> createState() =>
-      _WarekiDatePickerDialogState();
+  State<WarekiDatePickerDialog> createState() => _WarekiDatePickerDialogState();
 }
 
-class _WarekiDatePickerDialogState
-    extends State<WarekiDatePickerDialog> {
+class _WarekiDatePickerDialogState extends State<WarekiDatePickerDialog> {
   static const purple = Color(0xFF9B5CFF);
   static const lightPurple = Color(0xFFF2E8FF);
 
@@ -490,50 +518,25 @@ class _WarekiDatePickerDialogState
       widget.initialDate.day,
     );
 
-    _viewMonth = DateTime(
-      widget.initialDate.year,
-      widget.initialDate.month,
-      1,
-    );
+    _viewMonth = DateTime(widget.initialDate.year, widget.initialDate.month, 1);
   }
 
-  bool _sameDay(
-    DateTime a,
-    DateTime b,
-  ) {
-    return a.year == b.year &&
-        a.month == b.month &&
-        a.day == b.day;
+  bool _sameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   bool get _canPreviousMonth {
-    final previous = DateTime(
-      _viewMonth.year,
-      _viewMonth.month - 1,
-      1,
-    );
+    final previous = DateTime(_viewMonth.year, _viewMonth.month - 1, 1);
 
-    final minimum = DateTime(
-      widget.firstDate.year,
-      widget.firstDate.month,
-      1,
-    );
+    final minimum = DateTime(widget.firstDate.year, widget.firstDate.month, 1);
 
     return !previous.isBefore(minimum);
   }
 
   bool get _canNextMonth {
-    final next = DateTime(
-      _viewMonth.year,
-      _viewMonth.month + 1,
-      1,
-    );
+    final next = DateTime(_viewMonth.year, _viewMonth.month + 1, 1);
 
-    final maximum = DateTime(
-      widget.lastDate.year,
-      widget.lastDate.month,
-      1,
-    );
+    final maximum = DateTime(widget.lastDate.year, widget.lastDate.month, 1);
 
     return !next.isAfter(maximum);
   }
@@ -544,11 +547,7 @@ class _WarekiDatePickerDialogState
     }
 
     setState(() {
-      _viewMonth = DateTime(
-        _viewMonth.year,
-        _viewMonth.month - 1,
-        1,
-      );
+      _viewMonth = DateTime(_viewMonth.year, _viewMonth.month - 1, 1);
     });
   }
 
@@ -558,33 +557,23 @@ class _WarekiDatePickerDialogState
     }
 
     setState(() {
-      _viewMonth = DateTime(
-        _viewMonth.year,
-        _viewMonth.month + 1,
-        1,
-      );
+      _viewMonth = DateTime(_viewMonth.year, _viewMonth.month + 1, 1);
     });
   }
 
   void _selectYear(int year) {
     var month = _viewMonth.month;
 
-    if (year == widget.lastDate.year &&
-        month > widget.lastDate.month) {
+    if (year == widget.lastDate.year && month > widget.lastDate.month) {
       month = widget.lastDate.month;
     }
 
-    if (year == widget.firstDate.year &&
-        month < widget.firstDate.month) {
+    if (year == widget.firstDate.year && month < widget.firstDate.month) {
       month = widget.firstDate.month;
     }
 
     setState(() {
-      _viewMonth = DateTime(
-        year,
-        month,
-        1,
-      );
+      _viewMonth = DateTime(year, month, 1);
 
       _yearMode = false;
     });
@@ -594,25 +583,16 @@ class _WarekiDatePickerDialogState
   Widget build(BuildContext context) {
     return Dialog(
       insetPadding: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: 680,
-          maxHeight: 620,
-        ),
+        constraints: const BoxConstraints(maxWidth: 680, maxHeight: 620),
         child: Column(
           children: [
             _buildTopHeader(),
 
             const Divider(height: 1),
 
-            Expanded(
-              child: _yearMode
-                  ? _buildYearPicker()
-                  : _buildCalendar(),
-            ),
+            Expanded(child: _yearMode ? _buildYearPicker() : _buildCalendar()),
 
             const Divider(height: 1),
 
@@ -626,27 +606,17 @@ class _WarekiDatePickerDialogState
   Widget _buildTopHeader() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        22,
-        18,
-        22,
-        16,
-      ),
+      padding: const EdgeInsets.fromLTRB(22, 18, 22, 16),
       decoration: const BoxDecoration(
         color: lightPurple,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(28),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             '推し始めた日を選択',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.black54,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.black54),
           ),
 
           const SizedBox(height: 7),
@@ -656,10 +626,7 @@ class _WarekiDatePickerDialogState
             '${_selectedDate.month}月'
             '${_selectedDate.day}日'
             '（${weekdayJapanese(_selectedDate.weekday)}）',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
 
           const SizedBox(height: 3),
@@ -679,12 +646,7 @@ class _WarekiDatePickerDialogState
 
   Widget _buildCalendar() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        18,
-        12,
-        18,
-        6,
-      ),
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 6),
       child: Column(
         children: [
           Row(
@@ -716,9 +678,7 @@ class _WarekiDatePickerDialogState
 
                         const SizedBox(width: 6),
 
-                        const Icon(
-                          Icons.arrow_drop_down_rounded,
-                        ),
+                        const Icon(Icons.arrow_drop_down_rounded),
                       ],
                     ),
                   ),
@@ -726,18 +686,13 @@ class _WarekiDatePickerDialogState
               ),
 
               IconButton(
-                onPressed:
-                    _canPreviousMonth ? _previousMonth : null,
-                icon: const Icon(
-                  Icons.chevron_left_rounded,
-                ),
+                onPressed: _canPreviousMonth ? _previousMonth : null,
+                icon: const Icon(Icons.chevron_left_rounded),
               ),
 
               IconButton(
                 onPressed: _canNextMonth ? _nextMonth : null,
-                icon: const Icon(
-                  Icons.chevron_right_rounded,
-                ),
+                icon: const Icon(Icons.chevron_right_rounded),
               ),
             ],
           ),
@@ -746,56 +701,38 @@ class _WarekiDatePickerDialogState
 
           const Row(
             children: [
-              CalendarWeekday(
-                text: '日',
-                isSunday: true,
-              ),
+              CalendarWeekday(text: '日', isSunday: true),
               CalendarWeekday(text: '月'),
               CalendarWeekday(text: '火'),
               CalendarWeekday(text: '水'),
               CalendarWeekday(text: '木'),
               CalendarWeekday(text: '金'),
-              CalendarWeekday(
-                text: '土',
-                isSaturday: true,
-              ),
+              CalendarWeekday(text: '土', isSaturday: true),
             ],
           ),
 
           const SizedBox(height: 5),
 
-          Expanded(
-            child: _buildDays(),
-          ),
+          Expanded(child: _buildDays()),
         ],
       ),
     );
   }
 
   Widget _buildDays() {
-    final firstDay = DateTime(
-      _viewMonth.year,
-      _viewMonth.month,
-      1,
-    );
+    final firstDay = DateTime(_viewMonth.year, _viewMonth.month, 1);
 
-    final daysInMonth = DateTime(
-      _viewMonth.year,
-      _viewMonth.month + 1,
-      0,
-    ).day;
+    final daysInMonth = DateTime(_viewMonth.year, _viewMonth.month + 1, 0).day;
 
     final leadingSpaces = firstDay.weekday % 7;
 
-    final totalCells =
-        ((leadingSpaces + daysInMonth + 6) ~/ 7) * 7;
+    final totalCells = ((leadingSpaces + daysInMonth + 6) ~/ 7) * 7;
 
     final today = DateTime.now();
 
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate:
-          const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 7,
         childAspectRatio: 1.2,
       ),
@@ -807,25 +744,14 @@ class _WarekiDatePickerDialogState
           return const SizedBox.shrink();
         }
 
-        final date = DateTime(
-          _viewMonth.year,
-          _viewMonth.month,
-          day,
-        );
+        final date = DateTime(_viewMonth.year, _viewMonth.month, day);
 
         final disabled =
-            date.isBefore(widget.firstDate) ||
-            date.isAfter(widget.lastDate);
+            date.isBefore(widget.firstDate) || date.isAfter(widget.lastDate);
 
-        final selected = _sameDay(
-          date,
-          _selectedDate,
-        );
+        final selected = _sameDay(date, _selectedDate);
 
-        final isToday = _sameDay(
-          date,
-          today,
-        );
+        final isToday = _sameDay(date, today);
 
         final weekday = date.weekday;
 
@@ -857,23 +783,16 @@ class _WarekiDatePickerDialogState
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: selected
-                    ? purple
-                    : Colors.transparent,
+                color: selected ? purple : Colors.transparent,
                 border: isToday && !selected
-                    ? Border.all(
-                        color: purple,
-                        width: 1.5,
-                      )
+                    ? Border.all(color: purple, width: 1.5)
                     : null,
               ),
               child: Text(
                 '$day',
                 style: TextStyle(
                   color: textColor,
-                  fontWeight: selected
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ),
@@ -887,32 +806,17 @@ class _WarekiDatePickerDialogState
     final firstYear = widget.firstDate.year;
     final lastYear = widget.lastDate.year;
 
-    final years = [
-      for (
-        var year = firstYear;
-        year <= lastYear;
-        year++
-      )
-        year,
-    ];
+    final years = [for (var year = firstYear; year <= lastYear; year++) year];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        18,
-        12,
-        18,
-        6,
-      ),
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 6),
       child: Column(
         children: [
           Row(
             children: [
               const Text(
                 '年を選択',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
 
               const Spacer(),
@@ -923,12 +827,8 @@ class _WarekiDatePickerDialogState
                     _yearMode = false;
                   });
                 },
-                icon: const Icon(
-                  Icons.calendar_month_rounded,
-                ),
-                label: const Text(
-                  '月表示に戻る',
-                ),
+                icon: const Icon(Icons.calendar_month_rounded),
+                label: const Text('月表示に戻る'),
               ),
             ],
           ),
@@ -938,12 +838,10 @@ class _WarekiDatePickerDialogState
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final columns =
-                    constraints.maxWidth >= 520 ? 4 : 3;
+                final columns = constraints.maxWidth >= 520 ? 4 : 3;
 
                 return GridView.builder(
-                  gridDelegate:
-                      SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: columns,
                     childAspectRatio: 1.65,
                     crossAxisSpacing: 8,
@@ -953,47 +851,32 @@ class _WarekiDatePickerDialogState
                   itemBuilder: (context, index) {
                     final year = years[index];
 
-                    final selected =
-                        year == _viewMonth.year;
+                    final selected = year == _viewMonth.year;
 
                     return InkWell(
-                      borderRadius:
-                          BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(15),
                       onTap: () {
                         _selectYear(year);
                       },
                       child: Container(
                         alignment: Alignment.center,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
                         decoration: BoxDecoration(
-                          color: selected
-                              ? purple
-                              : Colors.white,
-                          borderRadius:
-                              BorderRadius.circular(15),
+                          color: selected ? purple : Colors.white,
+                          borderRadius: BorderRadius.circular(15),
                           border: Border.all(
-                            color: selected
-                                ? purple
-                                : const Color(
-                                    0xFFE4DDF0,
-                                  ),
+                            color: selected ? purple : const Color(0xFFE4DDF0),
                           ),
                         ),
                         child: Column(
-                          mainAxisAlignment:
-                              MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               '$year年',
                               style: TextStyle(
-                                color: selected
-                                    ? Colors.white
-                                    : Colors.black87,
+                                color: selected ? Colors.white : Colors.black87,
                                 fontSize: 15,
-                                fontWeight:
-                                    FontWeight.bold,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
 
@@ -1003,14 +886,8 @@ class _WarekiDatePickerDialogState
                               warekiYearLabel(year),
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: selected
-                                    ? Colors.white70
-                                    : purple,
-                                fontSize:
-                                    year == 1989 ||
-                                            year == 2019
-                                        ? 9
-                                        : 11,
+                                color: selected ? Colors.white70 : purple,
+                                fontSize: year == 1989 || year == 2019 ? 9 : 11,
                               ),
                             ),
                           ],
@@ -1029,12 +906,7 @@ class _WarekiDatePickerDialogState
 
   Widget _buildButtons() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        16,
-        8,
-        16,
-        12,
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -1042,26 +914,17 @@ class _WarekiDatePickerDialogState
             onPressed: () {
               Navigator.pop(context);
             },
-            child: const Text(
-              'キャンセル',
-            ),
+            child: const Text('キャンセル'),
           ),
 
           const SizedBox(width: 8),
 
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: purple,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: purple),
             onPressed: () {
-              Navigator.pop(
-                context,
-                _selectedDate,
-              );
+              Navigator.pop(context, _selectedDate);
             },
-            child: const Text(
-              '決定',
-            ),
+            child: const Text('決定'),
           ),
         ],
       ),
@@ -1101,10 +964,7 @@ class CalendarWeekday extends StatelessWidget {
       child: Center(
         child: Text(
           text,
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: color, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -1116,15 +976,7 @@ class CalendarWeekday extends StatelessWidget {
 // ============================================================
 
 String weekdayJapanese(int weekday) {
-  const weekdays = [
-    '月',
-    '火',
-    '水',
-    '木',
-    '金',
-    '土',
-    '日',
-  ];
+  const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
 
   return weekdays[weekday - 1];
 }
@@ -1144,8 +996,7 @@ String warekiDate(DateTime date) {
     eraYear = date.year - 1925;
   }
 
-  final yearText =
-      eraYear == 1 ? '元' : '$eraYear';
+  final yearText = eraYear == 1 ? '元' : '$eraYear';
 
   return '$era$yearText年'
       '${date.month}月'
@@ -1181,10 +1032,7 @@ String monthWarekiLabel(DateTime date) {
     } else {
       wareki = '平成31年';
     }
-  } else if (
-      date.year == 1989 &&
-      date.month == 1
-  ) {
+  } else if (date.year == 1989 && date.month == 1) {
     wareki = '昭和64年 / 平成元年';
   } else if (date.year >= 2020) {
     wareki = '令和${date.year - 2018}年';

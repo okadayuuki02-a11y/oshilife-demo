@@ -11,6 +11,7 @@ import 'screens/oshi_edit_screen.dart';
 import 'screens/graduated_oshi_screen.dart';
 import 'screens/event_screen.dart';
 import 'screens/event_detail_screen.dart';
+import 'screens/event_add_screen.dart';
 import 'screens/activity_screens.dart';
 import 'services/oshi_storage.dart';
 import 'services/event_storage.dart';
@@ -39,15 +40,11 @@ class OshiLifeApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
 
-      supportedLocales: const [
-        Locale('ja', 'JP'),
-      ],
+      supportedLocales: const [Locale('ja', 'JP')],
 
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF9B5CFF),
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF9B5CFF)),
       ),
 
       home: const MainScreen(),
@@ -114,7 +111,8 @@ class _MainScreenState extends State<MainScreen> {
   void _handleRouteChange(Route<dynamic>? route) {
     final name = route?.settings.name;
     _currentContentRouteName = name;
-    final shouldShow = name == null ||
+    final shouldShow =
+        name == null ||
         name == '/' ||
         name.startsWith('tab_') ||
         name == 'oshi_detail' ||
@@ -178,17 +176,18 @@ class _MainScreenState extends State<MainScreen> {
       (saved) =>
           saved.id == event.id ||
           (saved.title == event.title &&
-          saved.date.year == event.date.year &&
-          saved.date.month == event.date.month &&
-          saved.date.day == event.date.day &&
-          saved.venue == event.venue),
+              saved.date.year == event.date.year &&
+              saved.date.month == event.date.month &&
+              saved.date.day == event.date.day &&
+              saved.venue == event.venue),
     );
 
     setState(() {
       if (sameIndex >= 0) {
         final existing = _events[sameIndex];
-        _events[sameIndex] =
-            existing.id == event.id ? event : event.copyWith(id: existing.id);
+        _events[sameIndex] = existing.id == event.id
+            ? event
+            : event.copyWith(id: existing.id);
       } else {
         _events.add(event);
       }
@@ -201,7 +200,9 @@ class _MainScreenState extends State<MainScreen> {
     final idIndex = _events.indexWhere((event) => event.id == target.id);
     if (idIndex >= 0) return idIndex;
 
-    final identityIndex = _events.indexWhere((event) => identical(event, target));
+    final identityIndex = _events.indexWhere(
+      (event) => identical(event, target),
+    );
     if (identityIndex >= 0) return identityIndex;
 
     return _events.indexWhere(
@@ -244,10 +245,9 @@ class _MainScreenState extends State<MainScreen> {
   OshiEvent? get _nextEvent {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final upcoming = _events
-        .where((event) => !event.date.isBefore(today))
-        .toList()
-      ..sort((a, b) => _eventDateTime(a).compareTo(_eventDateTime(b)));
+    final upcoming =
+        _events.where((event) => !event.date.isBefore(today)).toList()
+          ..sort((a, b) => _eventDateTime(a).compareTo(_eventDateTime(b)));
 
     if (upcoming.isEmpty) return null;
     return upcoming.first;
@@ -321,20 +321,21 @@ class _MainScreenState extends State<MainScreen> {
   TicketRecord? get _urgentTicket {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final candidates = _tickets.where((ticket) {
-      if (ticket.status != TicketStatus.wonUnpaid ||
-          ticket.paymentDeadline == null) {
-        return false;
-      }
-      final deadline = DateTime(
-        ticket.paymentDeadline!.year,
-        ticket.paymentDeadline!.month,
-        ticket.paymentDeadline!.day,
-      );
-      final days = deadline.difference(today).inDays;
-      return days <= 3;
-    }).toList()
-      ..sort((a, b) => a.paymentDeadline!.compareTo(b.paymentDeadline!));
+    final candidates =
+        _tickets.where((ticket) {
+            if (ticket.status != TicketStatus.wonUnpaid ||
+                ticket.paymentDeadline == null) {
+              return false;
+            }
+            final deadline = DateTime(
+              ticket.paymentDeadline!.year,
+              ticket.paymentDeadline!.month,
+              ticket.paymentDeadline!.day,
+            );
+            final days = deadline.difference(today).inDays;
+            return days <= 3;
+          }).toList()
+          ..sort((a, b) => a.paymentDeadline!.compareTo(b.paymentDeadline!));
 
     return candidates.isEmpty ? null : candidates.first;
   }
@@ -362,10 +363,10 @@ class _MainScreenState extends State<MainScreen> {
     final label = days < 0
         ? '支払期限を過ぎています'
         : days == 0
-            ? '今日が支払期限です'
-            : days == 1
-                ? '支払期限は明日です'
-                : '支払期限まであと$days日';
+        ? '今日が支払期限です'
+        : days == 1
+        ? '支払期限は明日です'
+        : '支払期限まであと$days日';
 
     OshiEvent? event;
     for (final value in _events) {
@@ -439,11 +440,7 @@ class _MainScreenState extends State<MainScreen> {
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: background,
-        body: Center(
-          child: CircularProgressIndicator(
-            color: purple,
-          ),
-        ),
+        body: Center(child: CircularProgressIndicator(color: purple)),
       );
     }
 
@@ -465,56 +462,45 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           if (_showShellAd) const FreePlanAdBanner(),
           NavigationBar(
-        selectedIndex: _selectedIndex,
-        height: 66,
-        indicatorColor: lightPurple,
+            selectedIndex: _selectedIndex,
+            height: 66,
+            indicatorColor: lightPurple,
 
-        onDestinationSelected: _handleDestinationSelected,
+            onDestinationSelected: _handleDestinationSelected,
 
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(
-              Icons.home_rounded,
-              color: purple,
-            ),
-            label: 'ホーム',
-          ),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home_rounded, color: purple),
+                label: 'ホーム',
+              ),
 
-          NavigationDestination(
-            icon: Icon(Icons.favorite_border_rounded),
-            selectedIcon: Icon(
-              Icons.favorite_rounded,
-              color: purple,
-            ),
-            label: '推し',
-          ),
+              NavigationDestination(
+                icon: Icon(Icons.favorite_border_rounded),
+                selectedIcon: Icon(Icons.favorite_rounded, color: purple),
+                label: '推し',
+              ),
 
-          NavigationDestination(
-            icon: Icon(Icons.event_outlined),
-            selectedIcon: Icon(
-              Icons.event_rounded,
-              color: purple,
-            ),
-            label: 'イベント',
-          ),
+              NavigationDestination(
+                icon: Icon(Icons.event_outlined),
+                selectedIcon: Icon(Icons.event_rounded, color: purple),
+                label: 'イベント',
+              ),
 
-          NavigationDestination(
-            icon: Icon(
-              Icons.account_balance_wallet_outlined,
-            ),
-            selectedIcon: Icon(
-              Icons.account_balance_wallet_rounded,
-              color: purple,
-            ),
-            label: '家計簿',
-          ),
+              NavigationDestination(
+                icon: Icon(Icons.account_balance_wallet_outlined),
+                selectedIcon: Icon(
+                  Icons.account_balance_wallet_rounded,
+                  color: purple,
+                ),
+                label: '家計簿',
+              ),
 
-          NavigationDestination(
-            icon: Icon(Icons.more_horiz_rounded),
-            label: 'その他',
-          ),
-        ],
+              NavigationDestination(
+                icon: Icon(Icons.more_horiz_rounded),
+                label: 'トーク',
+              ),
+            ],
           ),
         ],
       ),
@@ -607,11 +593,7 @@ class _MainScreenState extends State<MainScreen> {
         );
 
       case 4:
-        return _buildPlaceholder(
-          icon: Icons.more_horiz_rounded,
-          title: 'その他',
-          text: 'その他画面',
-        );
+        return TalkListScreen(oshis: _oshis, onChanged: _refreshActivityData);
 
       default:
         return _buildHome();
@@ -629,9 +611,7 @@ class _MainScreenState extends State<MainScreen> {
     return SafeArea(
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: 430,
-          ),
+          constraints: const BoxConstraints(maxWidth: 430),
           child: LayoutBuilder(
             builder: (context, constraints) {
               final isNarrow = constraints.maxWidth < 340;
@@ -652,9 +632,7 @@ class _MainScreenState extends State<MainScreen> {
                         IconButton(
                           onPressed: () {},
                           visualDensity: VisualDensity.compact,
-                          icon: const Icon(
-                            Icons.menu_rounded,
-                          ),
+                          icon: const Icon(Icons.menu_rounded),
                         ),
 
                         const SizedBox(width: 2),
@@ -718,17 +696,10 @@ class _MainScreenState extends State<MainScreen> {
                     ),
 
                     const Padding(
-                      padding: EdgeInsets.only(
-                        left: 10,
-                        top: 2,
-                        bottom: 15,
-                      ),
+                      padding: EdgeInsets.only(left: 10, top: 2, bottom: 15),
                       child: Text(
                         '推しと過ごす、最高の毎日を。',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.black54,
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.black54),
                       ),
                     ),
 
@@ -778,15 +749,10 @@ class _MainScreenState extends State<MainScreen> {
                       },
                       child: Container(
                         width: double.infinity,
-                        padding: EdgeInsets.all(
-                          isNarrow ? 14 : 16,
-                        ),
+                        padding: EdgeInsets.all(isNarrow ? 14 : 16),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFFFF6FAE),
-                              Color(0xFF9B5CFF),
-                            ],
+                            colors: [Color(0xFFFF6FAE), Color(0xFF9B5CFF)],
                           ),
                           borderRadius: BorderRadius.circular(20),
                         ),
@@ -842,7 +808,8 @@ class _MainScreenState extends State<MainScreen> {
                               ],
                             ),
 
-                            if (nextEvent != null && nextEvent.venue.trim().isNotEmpty) ...[
+                            if (nextEvent != null &&
+                                nextEvent.venue.trim().isNotEmpty) ...[
                               const SizedBox(height: 6),
                               Row(
                                 children: [
@@ -890,15 +857,11 @@ class _MainScreenState extends State<MainScreen> {
                       },
                       child: Container(
                         width: double.infinity,
-                        padding: EdgeInsets.all(
-                          isNarrow ? 14 : 16,
-                        ),
+                        padding: EdgeInsets.all(isNarrow ? 14 : 16),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: const Color(0xFFE9E0FA),
-                          ),
+                          border: Border.all(color: const Color(0xFFE9E0FA)),
                         ),
                         child: Column(
                           children: [
@@ -938,9 +901,13 @@ class _MainScreenState extends State<MainScreen> {
                               child: LinearProgressIndicator(
                                 value: _currentMonthExpense <= 0
                                     ? 0
-                                    : (_currentMonthExpense / (_currentMonthExpense + (_currentBalance > 0 ? _currentBalance : 0)))
-                                        .clamp(0.0, 1.0)
-                                        .toDouble(),
+                                    : (_currentMonthExpense /
+                                              (_currentMonthExpense +
+                                                  (_currentBalance > 0
+                                                      ? _currentBalance
+                                                      : 0)))
+                                          .clamp(0.0, 1.0)
+                                          .toDouble(),
                                 minHeight: 8,
                                 backgroundColor: Color(0xFFECE7F5),
                                 color: purple,
@@ -996,9 +963,7 @@ class _MainScreenState extends State<MainScreen> {
                           },
                           child: const Text(
                             '推し一覧へ',
-                            style: TextStyle(
-                              color: purple,
-                            ),
+                            style: TextStyle(color: purple),
                           ),
                         ),
                       ],
@@ -1019,13 +984,9 @@ class _MainScreenState extends State<MainScreen> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: const Color(0xFFE9E0FA),
-                            ),
+                            border: Border.all(color: const Color(0xFFE9E0FA)),
                           ),
-                          child: OshiListTile(
-                            oshi: primary,
-                          ),
+                          child: OshiListTile(oshi: primary),
                         ),
                       )
                     else
@@ -1035,9 +996,7 @@ class _MainScreenState extends State<MainScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: const Color(0xFFE9E0FA),
-                          ),
+                          border: Border.all(color: const Color(0xFFE9E0FA)),
                         ),
                         child: const Text(
                           '1推しがまだ登録されていません',
@@ -1071,16 +1030,9 @@ class _MainScreenState extends State<MainScreen> {
     return SafeArea(
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: 430,
-          ),
+          constraints: const BoxConstraints(maxWidth: 430),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              18,
-              16,
-              18,
-              10,
-            ),
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1098,13 +1050,8 @@ class _MainScreenState extends State<MainScreen> {
 
                     FilledButton.icon(
                       onPressed: _showAddOshi,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: purple,
-                      ),
-                      icon: const Icon(
-                        Icons.add_rounded,
-                        size: 19,
-                      ),
+                      style: FilledButton.styleFrom(backgroundColor: purple),
+                      icon: const Icon(Icons.add_rounded, size: 19),
                       label: const Text('追加'),
                     ),
                   ],
@@ -1114,10 +1061,7 @@ class _MainScreenState extends State<MainScreen> {
 
                 const Text(
                   'あなたの大切な推しを管理',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.black45,
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.black45),
                 ),
 
                 const SizedBox(height: 22),
@@ -1125,10 +1069,7 @@ class _MainScreenState extends State<MainScreen> {
                 if (primary != null) ...[
                   const Text(
                     '1推し',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                   ),
 
                   const SizedBox(height: 9),
@@ -1143,10 +1084,7 @@ class _MainScreenState extends State<MainScreen> {
                       padding: const EdgeInsets.all(17),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFFF3EDFF),
-                            Color(0xFFFFF9FF),
-                          ],
+                          colors: [Color(0xFFF3EDFF), Color(0xFFFFF9FF)],
                         ),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
@@ -1156,16 +1094,11 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                       child: Column(
                         children: [
-                          OshiListTile(
-                            oshi: primary,
-                          ),
+                          OshiListTile(oshi: primary),
 
                           const SizedBox(height: 15),
 
-                          const Divider(
-                            height: 1,
-                            color: Color(0xFFE1D8F2),
-                          ),
+                          const Divider(height: 1, color: Color(0xFFE1D8F2)),
 
                           const SizedBox(height: 14),
 
@@ -1183,16 +1116,12 @@ class _MainScreenState extends State<MainScreen> {
                               Expanded(
                                 child: OshiStat(
                                   label: 'アプリ登録',
-                                  value:
-                                      '${primary.registeredDays}日',
+                                  value: '${primary.registeredDays}日',
                                 ),
                               ),
 
                               const Expanded(
-                                child: OshiStat(
-                                  label: 'ポイント',
-                                  value: '1 pt',
-                                ),
+                                child: OshiStat(label: 'ポイント', value: '1 pt'),
                               ),
                             ],
                           ),
@@ -1292,7 +1221,9 @@ class _MainScreenState extends State<MainScreen> {
                                         padding: const EdgeInsets.all(14),
                                         decoration: BoxDecoration(
                                           color: Colors.white,
-                                          borderRadius: BorderRadius.circular(20),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                           border: Border.all(
                                             color: const Color(0xFFE9E0FA),
                                           ),
@@ -1336,18 +1267,13 @@ class _MainScreenState extends State<MainScreen> {
                   },
 
                   style: OutlinedButton.styleFrom(
-                    minimumSize:
-                        const Size(double.infinity, 48),
+                    minimumSize: const Size(double.infinity, 48),
                     foregroundColor: purple,
                   ),
 
-                  icon: const Icon(
-                    Icons.history_rounded,
-                  ),
+                  icon: const Icon(Icons.history_rounded),
 
-                  label: const Text(
-                    '卒業・過去の推しを見る',
-                  ),
+                  label: const Text('卒業・過去の推しを見る'),
                 ),
               ],
             ),
@@ -1397,13 +1323,8 @@ class _MainScreenState extends State<MainScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${newOshi.name}を推しに追加しました！',
-        ),
-      ),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('${newOshi.name}を推しに追加しました！')));
   }
 
   // =========================================================
@@ -1426,6 +1347,11 @@ class _MainScreenState extends State<MainScreen> {
             oshi: oshi,
             groupSuggestions: _groupSuggestions,
             events: _events,
+            oshis: _oshis,
+            onAddEvent: _addEvent,
+            onUpdateEvent: _updateEvent,
+            onDeleteEvent: _deleteEvent,
+            onActivityChanged: _refreshActivityData,
             onBackToList: () => _switchTab(1),
             onDelete: (deletedOshi) async {
               setState(() {
@@ -1467,30 +1393,20 @@ class _MainScreenState extends State<MainScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 55,
-              color: purple,
-            ),
+            Icon(icon, size: 55, color: purple),
 
             const SizedBox(height: 14),
 
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 8),
 
             Text(
               text,
-              style: const TextStyle(
-                fontSize: 15,
-                color: Colors.black45,
-              ),
+              style: const TextStyle(fontSize: 15, color: Colors.black45),
             ),
           ],
         ),
@@ -1510,6 +1426,11 @@ class OshiDetailScreen extends StatefulWidget {
   final VoidCallback onBackToList;
   final List<String> groupSuggestions;
   final List<OshiEvent> events;
+  final List<Oshi> oshis;
+  final Future<void> Function(OshiEvent) onAddEvent;
+  final Future<void> Function(OshiEvent, OshiEvent) onUpdateEvent;
+  final Future<void> Function(OshiEvent) onDeleteEvent;
+  final Future<void> Function() onActivityChanged;
 
   const OshiDetailScreen({
     super.key,
@@ -1517,23 +1438,25 @@ class OshiDetailScreen extends StatefulWidget {
     required this.onChanged,
     required this.onDelete,
     required this.onBackToList,
+    required this.oshis,
+    required this.onAddEvent,
+    required this.onUpdateEvent,
+    required this.onDeleteEvent,
+    required this.onActivityChanged,
     this.groupSuggestions = const <String>[],
     this.events = const <OshiEvent>[],
   });
 
   @override
-  State<OshiDetailScreen> createState() =>
-      _OshiDetailScreenState();
+  State<OshiDetailScreen> createState() => _OshiDetailScreenState();
 }
 
-class _OshiDetailScreenState
-    extends State<OshiDetailScreen> {
+class _OshiDetailScreenState extends State<OshiDetailScreen> {
   static const purple = Color(0xFF9B5CFF);
   static const background = Color(0xFFFFF8FF);
 
   Future<void> _editOshi() async {
-    final updatedOshi =
-        await Navigator.of(context).push<Oshi>(
+    final updatedOshi = await Navigator.of(context).push<Oshi>(
       MaterialPageRoute(
         settings: const RouteSettings(name: 'oshi_edit'),
         builder: (context) {
@@ -1555,13 +1478,8 @@ class _OshiDetailScreenState
 
     setState(() {});
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          '推し情報を更新しました！',
-        ),
-      ),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('推し情報を更新しました！')));
   }
 
   Future<void> _graduateOshi() async {
@@ -1586,9 +1504,8 @@ class _OshiDetailScreenState
     await widget.onChanged(oshi);
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${oshi.name}を過去の推しへ移動しました')),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('${oshi.name}を過去の推しへ移動しました')));
     widget.onBackToList();
   }
 
@@ -1599,9 +1516,7 @@ class _OshiDetailScreenState
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('推しを削除'),
-          content: Text(
-            '${oshi.name}を削除しますか？\n誤登録を消すための操作です。削除したデータは元に戻せません。',
-          ),
+          content: Text('${oshi.name}を削除しますか？\n誤登録を消すための操作です。削除したデータは元に戻せません。'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
@@ -1626,7 +1541,14 @@ class _OshiDetailScreenState
   void _openFavoriteSong() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => _OshiFavoriteSongScreen(oshi: widget.oshi),
+        builder: (_) => _OshiFavoriteSongScreen(
+          oshi: widget.oshi,
+          onSave: (song) async {
+            widget.oshi.favoriteSong = song;
+            await widget.onChanged(widget.oshi);
+            if (mounted) setState(() {});
+          },
+        ),
       ),
     );
   }
@@ -1634,7 +1556,12 @@ class _OshiDetailScreenState
   void _openChekiHistory() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => _OshiChekiHistoryScreen(oshi: widget.oshi),
+        builder: (_) => _OshiChekiHistoryScreen(
+          oshi: widget.oshi,
+          events: widget.events,
+          oshis: widget.oshis,
+          onChanged: widget.onActivityChanged,
+        ),
       ),
     );
   }
@@ -1645,6 +1572,11 @@ class _OshiDetailScreenState
         builder: (_) => _OshiEventHistoryScreen(
           oshi: widget.oshi,
           events: widget.events,
+          oshis: widget.oshis,
+          onAddEvent: widget.onAddEvent,
+          onUpdateEvent: widget.onUpdateEvent,
+          onDeleteEvent: widget.onDeleteEvent,
+          onActivityChanged: widget.onActivityChanged,
         ),
       ),
     );
@@ -1656,6 +1588,10 @@ class _OshiDetailScreenState
         builder: (_) => _OshiTimelineScreen(
           oshi: widget.oshi,
           events: widget.events,
+          oshis: widget.oshis,
+          onUpdateEvent: widget.onUpdateEvent,
+          onDeleteEvent: widget.onDeleteEvent,
+          onActivityChanged: widget.onActivityChanged,
         ),
       ),
     );
@@ -1684,333 +1620,333 @@ class _OshiDetailScreenState
           ),
 
           title: const Text(
-          '推し詳細',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
+            '推し詳細',
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
-        ),
 
-        actions: [
-          TextButton.icon(
-            onPressed: widget.oshi.isManagementPaused ? null : _editOshi,
-            icon: const Icon(
-              Icons.edit_rounded,
-              size: 18,
+          actions: [
+            TextButton.icon(
+              onPressed: widget.oshi.isManagementPaused ? null : _editOshi,
+              icon: const Icon(Icons.edit_rounded, size: 18),
+              label: const Text('編集'),
             ),
-            label: const Text('編集'),
-          ),
-          PopupMenuButton<String>(
-            tooltip: 'その他',
-            onSelected: (value) {
-              if (value == 'delete') _deleteOshi();
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem<String>(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_outline_rounded, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('推しを削除', style: TextStyle(color: Colors.red)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: 430,
-          ),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              18,
-              10,
-              18,
-              30,
-            ),
-            children: [
-              if (oshi.isManagementPaused) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF2E8FF),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFDCC7F7)),
-                  ),
-                  child: const Row(
+            PopupMenuButton<String>(
+              tooltip: 'その他',
+              onSelected: (value) {
+                if (value == 'delete') _deleteOshi();
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Row(
                     children: [
-                      Icon(Icons.pause_circle_outline_rounded, color: purple),
-                      SizedBox(width: 9),
-                      Expanded(
-                        child: Text(
-                          '管理休止中・閲覧のみ',
-                          style: TextStyle(fontWeight: FontWeight.w900),
-                        ),
-                      ),
+                      Icon(Icons.delete_outline_rounded, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('推しを削除', style: TextStyle(color: Colors.red)),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
               ],
-              Center(
-                child: _OshiProfileAvatar(
-                  oshi: oshi,
-                  radius: 53,
-                  iconSize: 60,
-                ),
-              ),
+            ),
+            const SizedBox(width: 4),
+          ],
+        ),
 
-              const SizedBox(height: 12),
-
-              if (oshi.isPrimary)
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 430),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
+              children: [
+                if (oshi.isManagementPaused) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 11,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF2E8FF),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFDCC7F7)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.pause_circle_outline_rounded, color: purple),
+                        SizedBox(width: 9),
+                        Expanded(
+                          child: Text(
+                            '管理休止中・閲覧のみ',
+                            style: TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  child: _OshiProfileAvatar(
+                    oshi: oshi,
+                    radius: 53,
+                    iconSize: 60,
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                if (oshi.isPrimary)
+                  Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.workspace_premium_rounded,
+                          color: Color(0xFFFFB300),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '1推し',
+                          style: TextStyle(
+                            color: memberTextColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                const SizedBox(height: 5),
+
+                Text(
+                  oshi.name,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: memberTextColor,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+
+                Text(
+                  oshi.groupName,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.black54, fontSize: 14),
+                ),
+                if (oshi.memberColorHex != null) ...[
+                  const SizedBox(height: 7),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
-                        Icons.workspace_premium_rounded,
-                        color: Color(0xFFFFB300),
-                        size: 18,
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: memberColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.black12),
+                        ),
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 6),
                       Text(
-                        '1推し',
+                        'メンバーカラー',
                         style: TextStyle(
                           color: memberTextColor,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
                         ),
+                      ),
+                    ],
+                  ),
+                ],
+                if (oshi.isGraduated && oshi.graduatedAt != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    '卒業日：${oshi.graduatedAt!.year}年${oshi.graduatedAt!.month}月${oshi.graduatedAt!.day}日',
+                    style: const TextStyle(
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+                if (!oshi.isGraduated && !oshi.isManagementPaused) ...[
+                  const SizedBox(height: 14),
+                  OutlinedButton.icon(
+                    onPressed: _graduateOshi,
+                    icon: const Icon(Icons.school_outlined),
+                    label: const Text('卒業'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: memberTextColor,
+                      side: BorderSide(color: memberColor.withOpacity(0.55)),
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 22),
+
+                Container(
+                  padding: const EdgeInsets.all(17),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFE9E0FA)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: DetailStat(
+                          title: '推し日数',
+                          value: oshi.oshiDays == null
+                              ? '未設定'
+                              : '${oshi.oshiDays}日',
+                        ),
+                      ),
+
+                      Expanded(
+                        child: DetailStat(
+                          title: '登録日数',
+                          value: '${oshi.registeredDays}日',
+                        ),
+                      ),
+
+                      const Expanded(
+                        child: DetailStat(title: 'ポイント', value: '1 pt'),
                       ),
                     ],
                   ),
                 ),
 
-              const SizedBox(height: 5),
+                const SizedBox(height: 18),
 
-              Text(
-                oshi.name,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: memberTextColor,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
+                DetailCard(
+                  icon: Icons.music_note_rounded,
+                  title: '好きな曲',
+                  value: oshi.favoriteSong,
+                  onTap: _openFavoriteSong,
                 ),
-              ),
 
-              Text(
-                oshi.groupName,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.black54,
-                  fontSize: 14,
-                ),
-              ),
-              if (oshi.memberColorHex != null) ...[
-                const SizedBox(height: 7),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: memberColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.black12),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'メンバーカラー',
-                      style: TextStyle(
-                        color: memberTextColor,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              if (oshi.isGraduated && oshi.graduatedAt != null) ...[
                 const SizedBox(height: 10),
-                Text(
-                  '卒業日：${oshi.graduatedAt!.year}年${oshi.graduatedAt!.month}月${oshi.graduatedAt!.day}日',
-                  style: const TextStyle(
-                    color: Colors.black54,
-                    fontWeight: FontWeight.w800,
+
+                DetailCard(
+                  icon: Icons.photo_camera_rounded,
+                  title: 'チェキ',
+                  value: '撮影記録を見る',
+                  onTap: _openChekiHistory,
+                ),
+
+                const SizedBox(height: 10),
+
+                DetailCard(
+                  icon: Icons.event_available_rounded,
+                  title: '参加イベント',
+                  value: '参加履歴を見る',
+                  onTap: _openEventHistory,
+                ),
+
+                const SizedBox(height: 10),
+
+                DetailCard(
+                  icon: Icons.forum_outlined,
+                  title: 'トーク',
+                  value: '会話を記録・検索する',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => TalkListScreen(
+                        memberName: oshi.name,
+                        oshis: widget.oshis,
+                        onChanged: widget.onActivityChanged,
+                      ),
+                    ),
                   ),
+                ),
+
+                const SizedBox(height: 10),
+
+                DetailCard(
+                  icon: Icons.timeline_rounded,
+                  title: '推し年表',
+                  value: '記念日・活動履歴を見る',
+                  onTap: _openTimeline,
                 ),
               ],
-              if (!oshi.isGraduated && !oshi.isManagementPaused) ...[
-                const SizedBox(height: 14),
-                OutlinedButton.icon(
-                  onPressed: _graduateOshi,
-                  icon: const Icon(Icons.school_outlined),
-                  label: const Text('卒業'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: memberTextColor,
-                    side: BorderSide(color: memberColor.withOpacity(0.55)),
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 22),
-
-              Container(
-                padding: const EdgeInsets.all(17),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color(0xFFE9E0FA),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: DetailStat(
-                        title: '推し日数',
-                        value: oshi.oshiDays == null
-                            ? '未設定'
-                            : '${oshi.oshiDays}日',
-                      ),
-                    ),
-
-                    Expanded(
-                      child: DetailStat(
-                        title: '登録日数',
-                        value: '${oshi.registeredDays}日',
-                      ),
-                    ),
-
-                    const Expanded(
-                      child: DetailStat(
-                        title: 'ポイント',
-                        value: '1 pt',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 18),
-
-              DetailCard(
-                icon: Icons.music_note_rounded,
-                title: '好きな曲',
-                value: oshi.favoriteSong,
-                onTap: _openFavoriteSong,
-              ),
-
-              const SizedBox(height: 10),
-
-              DetailCard(
-                icon: Icons.photo_camera_rounded,
-                title: 'チェキ',
-                value: '撮影記録を見る',
-                onTap: _openChekiHistory,
-              ),
-
-              const SizedBox(height: 10),
-
-              DetailCard(
-                icon: Icons.event_available_rounded,
-                title: '参加イベント',
-                value: '参加履歴を見る',
-                onTap: _openEventHistory,
-              ),
-
-              const SizedBox(height: 10),
-
-              DetailCard(
-                icon: Icons.timeline_rounded,
-                title: '推し年表',
-                value: '記念日・活動履歴を見る',
-                onTap: _openTimeline,
-              ),
-            ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
 }
 
-class _OshiFavoriteSongScreen extends StatelessWidget {
-  const _OshiFavoriteSongScreen({required this.oshi});
-
+class _OshiFavoriteSongScreen extends StatefulWidget {
+  const _OshiFavoriteSongScreen({required this.oshi, required this.onSave});
   final Oshi oshi;
-
+  final Future<void> Function(String) onSave;
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFFF8FF),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFFFF8FF),
-        title: Text('${oshi.name}の好きな曲',
-            style: const TextStyle(fontWeight: FontWeight.w900)),
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 430),
-          child: ListView(
-            padding: const EdgeInsets.all(18),
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: const Color(0xFFE9E0FA)),
-                ),
-                child: Row(
-                  children: [
-                    const CircleAvatar(
-                      backgroundColor: Color(0xFFF2E8FF),
-                      foregroundColor: Color(0xFF9B5CFF),
-                      child: Icon(Icons.music_note_rounded),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('好きな曲',
-                              style: TextStyle(color: Colors.black45)),
-                          const SizedBox(height: 4),
-                          Text(
-                            oshi.favoriteSong,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+  State<_OshiFavoriteSongScreen> createState() =>
+      _OshiFavoriteSongScreenState();
+}
+
+class _OshiFavoriteSongScreenState extends State<_OshiFavoriteSongScreen> {
+  late final TextEditingController _song;
+  @override
+  void initState() {
+    super.initState();
+    _song = TextEditingController(
+      text: widget.oshi.favoriteSong == 'まだ分からない'
+          ? ''
+          : widget.oshi.favoriteSong,
     );
   }
+
+  @override
+  void dispose() {
+    _song.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    await widget.onSave(
+      _song.text.trim().isEmpty ? 'まだ分からない' : _song.text.trim(),
+    );
+    if (mounted) Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title: Text('${widget.oshi.name}の好きな曲'),
+      actions: [TextButton(onPressed: _save, child: const Text('保存'))],
+    ),
+    body: Padding(
+      padding: const EdgeInsets.all(20),
+      child: TextField(
+        controller: _song,
+        decoration: const InputDecoration(
+          labelText: '好きな曲',
+          hintText: '曲名を入力',
+          border: OutlineInputBorder(),
+        ),
+      ),
+    ),
+  );
 }
 
 class _OshiChekiHistoryScreen extends StatefulWidget {
-  const _OshiChekiHistoryScreen({required this.oshi});
+  const _OshiChekiHistoryScreen({
+    required this.oshi,
+    required this.events,
+    required this.oshis,
+    required this.onChanged,
+  });
 
   final Oshi oshi;
+  final List<OshiEvent> events;
+  final List<Oshi> oshis;
+  final Future<void> Function() onChanged;
 
   @override
-  State<_OshiChekiHistoryScreen> createState() => _OshiChekiHistoryScreenState();
+  State<_OshiChekiHistoryScreen> createState() =>
+      _OshiChekiHistoryScreenState();
 }
 
 class _OshiChekiHistoryScreenState extends State<_OshiChekiHistoryScreen> {
@@ -2026,11 +1962,68 @@ class _OshiChekiHistoryScreenState extends State<_OshiChekiHistoryScreen> {
     final values = await ActivityStorage.loadChekis();
     if (!mounted) return;
     setState(() {
-      _values = values
-          .where((value) => value.memberNames.contains(widget.oshi.name))
-          .toList()
-        ..sort((a, b) => (b.shotAt ?? b.createdAt).compareTo(a.shotAt ?? a.createdAt));
+      _values =
+          values
+              .where((value) => value.memberNames.contains(widget.oshi.name))
+              .toList()
+            ..sort(
+              (a, b) =>
+                  (b.shotAt ?? b.createdAt).compareTo(a.shotAt ?? a.createdAt),
+            );
     });
+  }
+
+  Future<void> _openRecord(ChekiRecord record) async {
+    final event = widget.events
+        .where((e) => e.id == record.eventId)
+        .firstOrNull;
+    if (event == null) return;
+    final updated = await Navigator.of(context).push<ChekiRecord>(
+      MaterialPageRoute(
+        builder: (_) => ChekiRecordEditScreen(
+          initial: record,
+          event: event,
+          oshis: widget.oshis,
+          onChanged: widget.onChanged,
+        ),
+      ),
+    );
+    if (updated != null) {
+      await ActivityStorage.saveCheki(updated);
+      await widget.onChanged();
+      await _load();
+    }
+  }
+
+  Future<void> _add() async {
+    final selected = await showModalBottomSheet<OshiEvent>(
+      context: context,
+      builder: (ctx) => ListView(
+        shrinkWrap: true,
+        children: [
+          const ListTile(title: Text('チェキを登録するイベントを選択')),
+          ...widget.events.map(
+            (e) => ListTile(
+              title: Text(e.title),
+              subtitle: Text(_simpleDate(e.date)),
+              onTap: () => Navigator.pop(ctx, e),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (selected == null || !mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => EventChekiScreen(
+          event: selected,
+          oshis: widget.oshis,
+          onChanged: widget.onChanged,
+          preselectedMember: widget.oshi.name,
+        ),
+      ),
+    );
+    await _load();
   }
 
   @override
@@ -2039,8 +2032,11 @@ class _OshiChekiHistoryScreenState extends State<_OshiChekiHistoryScreen> {
       backgroundColor: const Color(0xFFFFF8FF),
       appBar: AppBar(
         backgroundColor: const Color(0xFFFFF8FF),
-        title: Text('${widget.oshi.name}のチェキ',
-            style: const TextStyle(fontWeight: FontWeight.w900)),
+        title: Text(
+          '${widget.oshi.name}のチェキ',
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
+        actions: [TextButton(onPressed: _add, child: const Text('追加'))],
       ),
       body: _values.isEmpty
           ? const Center(child: Text('まだチェキ記録がありません'))
@@ -2063,41 +2059,54 @@ class _OshiChekiHistoryScreenState extends State<_OshiChekiHistoryScreen> {
                     image = null;
                   }
                 }
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFE9E0FA)),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: image == null
-                            ? const ColoredBox(
-                                color: Color(0xFFF2E8FF),
-                                child: Icon(Icons.photo_camera_rounded,
-                                    size: 46, color: Color(0xFF9B5CFF)),
-                              )
-                            : Image(image: image, fit: BoxFit.cover),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(value.type.label,
-                                style: const TextStyle(fontWeight: FontWeight.w900)),
-                            const SizedBox(height: 2),
-                            Text(
-                              _simpleDate(value.shotAt ?? value.createdAt),
-                              style: const TextStyle(fontSize: 12, color: Colors.black45),
-                            ),
-                          ],
+                return InkWell(
+                  onTap: () => _openRecord(value),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFE9E0FA)),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: image == null
+                              ? const ColoredBox(
+                                  color: Color(0xFFF2E8FF),
+                                  child: Icon(
+                                    Icons.photo_camera_rounded,
+                                    size: 46,
+                                    color: Color(0xFF9B5CFF),
+                                  ),
+                                )
+                              : Image(image: image, fit: BoxFit.cover),
                         ),
-                      ),
-                    ],
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                value.type.label,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _simpleDate(value.shotAt ?? value.createdAt),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black45,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -2107,16 +2116,51 @@ class _OshiChekiHistoryScreenState extends State<_OshiChekiHistoryScreen> {
 }
 
 class _OshiEventHistoryScreen extends StatelessWidget {
-  const _OshiEventHistoryScreen({required this.oshi, required this.events});
+  const _OshiEventHistoryScreen({
+    required this.oshi,
+    required this.events,
+    required this.oshis,
+    required this.onAddEvent,
+    required this.onUpdateEvent,
+    required this.onDeleteEvent,
+    required this.onActivityChanged,
+  });
 
   final Oshi oshi;
   final List<OshiEvent> events;
+  final List<Oshi> oshis;
+  final Future<void> Function(OshiEvent) onAddEvent;
+  final Future<void> Function(OshiEvent, OshiEvent) onUpdateEvent;
+  final Future<void> Function(OshiEvent) onDeleteEvent;
+  final Future<void> Function() onActivityChanged;
 
   bool _matches(OshiEvent event) {
     if (event.primaryGroup == oshi.groupName) return true;
     if (event.wantedGroups.contains(oshi.groupName)) return true;
     if (event.performers.contains(oshi.groupName)) return true;
     return false;
+  }
+
+  Future<void> _add(BuildContext context) async {
+    final event = await Navigator.of(context).push<OshiEvent>(
+      MaterialPageRoute(builder: (_) => const ManualEventScreen()),
+    );
+    if (event != null) await onAddEvent(event);
+  }
+
+  Future<void> _open(BuildContext context, OshiEvent event) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => EventDetailScreen(
+          event: event,
+          oshis: oshis,
+          onUpdateEvent: onUpdateEvent,
+          onDeleteEvent: onDeleteEvent,
+          onActivityChanged: onActivityChanged,
+          onBackToEventList: () => Navigator.of(context).pop(),
+        ),
+      ),
+    );
   }
 
   @override
@@ -2127,8 +2171,13 @@ class _OshiEventHistoryScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFFFF8FF),
       appBar: AppBar(
         backgroundColor: const Color(0xFFFFF8FF),
-        title: Text('${oshi.name}の参加イベント',
-            style: const TextStyle(fontWeight: FontWeight.w900)),
+        title: Text(
+          '${oshi.name}の参加イベント',
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
+        actions: [
+          TextButton(onPressed: () => _add(context), child: const Text('追加')),
+        ],
       ),
       body: values.isEmpty
           ? const Center(child: Text('まだ参加イベントがありません'))
@@ -2151,9 +2200,14 @@ class _OshiEventHistoryScreen extends StatelessWidget {
                       foregroundColor: Color(0xFF9B5CFF),
                       child: Icon(Icons.event_rounded),
                     ),
-                    title: Text(event.title,
-                        style: const TextStyle(fontWeight: FontWeight.w900)),
-                    subtitle: Text('${_simpleDate(event.date)}・${event.venue.isEmpty ? '会場未定' : event.venue}'),
+                    title: Text(
+                      event.title,
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    subtitle: Text(
+                      '${_simpleDate(event.date)}・${event.venue.isEmpty ? '会場未定' : event.venue}',
+                    ),
+                    onTap: () => _open(context, event),
                   ),
                 );
               },
@@ -2162,77 +2216,148 @@ class _OshiEventHistoryScreen extends StatelessWidget {
   }
 }
 
-class _OshiTimelineScreen extends StatelessWidget {
-  const _OshiTimelineScreen({required this.oshi, required this.events});
-
+class _OshiTimelineScreen extends StatefulWidget {
+  const _OshiTimelineScreen({
+    required this.oshi,
+    required this.events,
+    required this.oshis,
+    required this.onUpdateEvent,
+    required this.onDeleteEvent,
+    required this.onActivityChanged,
+  });
   final Oshi oshi;
   final List<OshiEvent> events;
+  final List<Oshi> oshis;
+  final Future<void> Function(OshiEvent, OshiEvent) onUpdateEvent;
+  final Future<void> Function(OshiEvent) onDeleteEvent;
+  final Future<void> Function() onActivityChanged;
+  @override
+  State<_OshiTimelineScreen> createState() => _OshiTimelineScreenState();
+}
 
-  bool _matches(OshiEvent event) {
-    return event.primaryGroup == oshi.groupName ||
-        event.wantedGroups.contains(oshi.groupName) ||
-        event.performers.contains(oshi.groupName);
+class _OshiTimelineScreenState extends State<_OshiTimelineScreen> {
+  List<ChekiRecord> _chekis = [];
+  List<TalkLog> _talks = [];
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final chekis = await ActivityStorage.loadChekis();
+    final talks = await ActivityStorage.loadTalks();
+    if (!mounted) return;
+    setState(() {
+      _chekis = chekis
+          .where((c) => c.memberNames.contains(widget.oshi.name))
+          .toList();
+      _talks = talks
+          .where((t) => t.participantNames.contains(widget.oshi.name))
+          .toList();
+    });
+  }
+
+  Future<void> _open(Object item) async {
+    if (item is OshiEvent) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => EventDetailScreen(
+            event: item,
+            oshis: widget.oshis,
+            onUpdateEvent: widget.onUpdateEvent,
+            onDeleteEvent: widget.onDeleteEvent,
+            onActivityChanged: widget.onActivityChanged,
+            onBackToEventList: () => Navigator.of(context).pop(),
+          ),
+        ),
+      );
+    } else if (item is ChekiRecord) {
+      final event = widget.events
+          .where((e) => e.id == item.eventId)
+          .firstOrNull;
+      if (event == null) return;
+      final updated = await Navigator.of(context).push<ChekiRecord>(
+        MaterialPageRoute(
+          builder: (_) => ChekiRecordEditScreen(
+            initial: item,
+            event: event,
+            oshis: widget.oshis,
+            onChanged: widget.onActivityChanged,
+          ),
+        ),
+      );
+      if (updated != null) await ActivityStorage.saveCheki(updated);
+    } else if (item is TalkLog) {
+      final event = widget.events
+          .where((e) => e.id == item.eventId)
+          .firstOrNull;
+      final updated = await Navigator.of(context).push<TalkLog>(
+        MaterialPageRoute(
+          builder: (_) => TalkEditScreen(
+            initial: item,
+            event: event,
+            oshis: widget.oshis,
+            chekis: _chekis,
+          ),
+        ),
+      );
+      if (updated != null) await ActivityStorage.saveTalk(updated);
+    }
+    await widget.onActivityChanged();
+    await _load();
   }
 
   @override
   Widget build(BuildContext context) {
-    final items = <(DateTime, String, IconData)>[];
+    final oshi = widget.oshi;
+    final items = <(DateTime, String, IconData, Object?)>[];
     if (oshi.oshiStartDate != null) {
-      items.add((oshi.oshiStartDate!, '推し始め', Icons.favorite_rounded));
+      items.add((oshi.oshiStartDate!, '推し始め', Icons.favorite_rounded, null));
     }
-    for (final event in events.where(_matches)) {
-      items.add((event.date, event.title, Icons.event_rounded));
+    for (final event in widget.events.where(
+      (e) =>
+          e.primaryGroup == oshi.groupName ||
+          e.wantedGroups.contains(oshi.groupName) ||
+          e.performers.contains(oshi.groupName),
+    )) {
+      items.add((event.date, event.title, Icons.event_rounded, event));
+    }
+    for (final cheki in _chekis) {
+      items.add((
+        cheki.shotAt ?? cheki.createdAt,
+        '${cheki.type.label} チェキ',
+        Icons.photo_camera,
+        cheki,
+      ));
+    }
+    for (final talk in _talks) {
+      items.add((talk.talkedAt, talk.sessionLabel, Icons.forum_outlined, talk));
     }
     if (oshi.graduatedAt != null) {
-      items.add((oshi.graduatedAt!, '卒業', Icons.school_rounded));
+      items.add((oshi.graduatedAt!, '卒業', Icons.school_rounded, null));
     }
     items.sort((a, b) => b.$1.compareTo(a.$1));
-
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8FF),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFFFF8FF),
-        title: Text('${oshi.name}の推し年表',
-            style: const TextStyle(fontWeight: FontWeight.w900)),
-      ),
+      appBar: AppBar(title: Text('${oshi.name}の推し年表')),
       body: items.isEmpty
           ? const Center(child: Text('年表に表示する記録がありません'))
           : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      children: [
-                        CircleAvatar(
-                          radius: 18,
-                          backgroundColor: const Color(0xFFF2E8FF),
-                          child: Icon(item.$3, size: 18, color: const Color(0xFF9B5CFF)),
-                        ),
-                        if (index != items.length - 1)
-                          Container(width: 2, height: 54, color: const Color(0xFFE9E0FA)),
-                      ],
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 3, bottom: 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(_simpleDate(item.$1),
-                                style: const TextStyle(fontSize: 12, color: Colors.black45)),
-                            const SizedBox(height: 3),
-                            Text(item.$2,
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+              itemBuilder: (context, i) {
+                final item = items[i];
+                return Card(
+                  child: ListTile(
+                    leading: Icon(item.$3, color: const Color(0xFF9B5CFF)),
+                    title: Text(item.$2),
+                    subtitle: Text(_simpleDate(item.$1)),
+                    trailing: item.$4 == null
+                        ? null
+                        : const Icon(Icons.chevron_right),
+                    onTap: item.$4 == null ? null : () => _open(item.$4!),
+                  ),
                 );
               },
             ),
@@ -2271,7 +2396,8 @@ class _OshiProfileAvatar extends StatelessWidget {
       }
     }
 
-    final memberColor = colorFromHex(oshi.memberColorHex) ?? _MainScreenState.purple;
+    final memberColor =
+        colorFromHex(oshi.memberColorHex) ?? _MainScreenState.purple;
     return CircleAvatar(
       radius: radius,
       backgroundColor: softMemberColor(memberColor),
@@ -2290,10 +2416,7 @@ class _OshiProfileAvatar extends StatelessWidget {
 class OshiListTile extends StatelessWidget {
   final Oshi oshi;
 
-  const OshiListTile({
-    super.key,
-    required this.oshi,
-  });
+  const OshiListTile({super.key, required this.oshi});
 
   static const purple = Color(0xFF9B5CFF);
   static const lightPurple = Color(0xFFF2E8FF);
@@ -2324,7 +2447,10 @@ class OshiListTile extends StatelessWidget {
                   if (oshi.isManagementPaused)
                     Container(
                       margin: const EdgeInsets.only(bottom: 3),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: lightPurple,
                         borderRadius: BorderRadius.circular(999),
@@ -2405,11 +2531,7 @@ class MoneyItem extends StatelessWidget {
   final String label;
   final String value;
 
-  const MoneyItem({
-    super.key,
-    required this.label,
-    required this.value,
-  });
+  const MoneyItem({super.key, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -2422,10 +2544,7 @@ class MoneyItem extends StatelessWidget {
             child: Text(
               label,
               maxLines: 1,
-              style: const TextStyle(
-                color: Colors.black45,
-                fontSize: 11,
-              ),
+              style: const TextStyle(color: Colors.black45, fontSize: 11),
             ),
           ),
 
@@ -2436,10 +2555,7 @@ class MoneyItem extends StatelessWidget {
             child: Text(
               value,
               maxLines: 1,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
           ),
         ],
@@ -2452,11 +2568,7 @@ class OshiStat extends StatelessWidget {
   final String label;
   final String value;
 
-  const OshiStat({
-    super.key,
-    required this.label,
-    required this.value,
-  });
+  const OshiStat({super.key, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -2469,10 +2581,7 @@ class OshiStat extends StatelessWidget {
             child: Text(
               label,
               maxLines: 1,
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.black45,
-              ),
+              style: const TextStyle(fontSize: 10, color: Colors.black45),
             ),
           ),
 
@@ -2483,10 +2592,7 @@ class OshiStat extends StatelessWidget {
             child: Text(
               value,
               maxLines: 1,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -2499,11 +2605,7 @@ class DetailStat extends StatelessWidget {
   final String title;
   final String value;
 
-  const DetailStat({
-    super.key,
-    required this.title,
-    required this.value,
-  });
+  const DetailStat({super.key, required this.title, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -2516,10 +2618,7 @@ class DetailStat extends StatelessWidget {
             child: Text(
               title,
               maxLines: 1,
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.black45,
-              ),
+              style: const TextStyle(fontSize: 10, color: Colors.black45),
             ),
           ),
 
@@ -2530,10 +2629,7 @@ class DetailStat extends StatelessWidget {
             child: Text(
               value,
               maxLines: 1,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
           ),
         ],
@@ -2568,9 +2664,7 @@ class DetailCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: const Color(0xFFE9E0FA),
-            ),
+            border: Border.all(color: const Color(0xFFE9E0FA)),
           ),
           child: Row(
             children: [
@@ -2581,10 +2675,7 @@ class DetailCard extends StatelessWidget {
                   color: const Color(0xFFF2E8FF),
                   borderRadius: BorderRadius.circular(13),
                 ),
-                child: Icon(
-                  icon,
-                  color: const Color(0xFF9B5CFF),
-                ),
+                child: Icon(icon, color: const Color(0xFF9B5CFF)),
               ),
               const SizedBox(width: 13),
               Expanded(
@@ -2595,9 +2686,7 @@ class DetailCard extends StatelessWidget {
                       title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -2612,10 +2701,7 @@ class DetailCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: Colors.black38,
-              ),
+              const Icon(Icons.chevron_right_rounded, color: Colors.black38),
             ],
           ),
         ),

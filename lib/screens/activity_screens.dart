@@ -9,6 +9,8 @@ import '../models/activity_models.dart';
 import '../models/oshi.dart';
 import '../models/oshi_event.dart';
 import '../services/activity_storage.dart';
+import 'talk_screens.dart';
+export 'talk_screens.dart' show EventTalkScreen, TalkEditScreen, TalkListScreen;
 
 const _purple = Color(0xFF9B5CFF);
 const _lightPurple = Color(0xFFF2E8FF);
@@ -32,19 +34,19 @@ String _date(DateTime? value) {
 }
 
 InputDecoration _decoration(String label, {IconData? icon}) => InputDecoration(
-      labelText: label,
-      prefixIcon: icon == null ? null : Icon(icon),
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: _border),
-      ),
-    );
+  labelText: label,
+  prefixIcon: icon == null ? null : Icon(icon),
+  filled: true,
+  fillColor: Colors.white,
+  border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(16),
+    borderSide: BorderSide.none,
+  ),
+  enabledBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(16),
+    borderSide: const BorderSide(color: _border),
+  ),
+);
 
 class EventTicketsScreen extends StatefulWidget {
   const EventTicketsScreen({
@@ -81,10 +83,8 @@ class _EventTicketsScreenState extends State<EventTicketsScreen> {
   Future<void> _edit([TicketRecord? initial]) async {
     final result = await Navigator.of(context).push<TicketRecord>(
       MaterialPageRoute(
-        builder: (_) => TicketEditScreen(
-          eventId: widget.event.id,
-          initial: initial,
-        ),
+        builder: (_) =>
+            TicketEditScreen(eventId: widget.event.id, initial: initial),
       ),
     );
     if (result == null) return;
@@ -143,7 +143,10 @@ class _EventTicketsScreenState extends State<EventTicketsScreen> {
       backgroundColor: _background,
       appBar: AppBar(
         backgroundColor: _background,
-        title: const Text('チケット', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text(
+          'チケット',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: _purple,
@@ -155,8 +158,10 @@ class _EventTicketsScreenState extends State<EventTicketsScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
         children: [
-          Text(widget.event.title,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+          Text(
+            widget.event.title,
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 12),
           if (_tickets.isEmpty)
             _EmptyCard(
@@ -185,9 +190,13 @@ class _EventTicketsScreenState extends State<EventTicketsScreen> {
                         children: [
                           _Pill(text: ticket.status.label),
                           const Spacer(),
-                          Text(_money(ticket.amount),
-                              style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.w900)),
+                          Text(
+                            _money(ticket.amount),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
                         ],
                       ),
                       if (alert != null) ...[
@@ -201,11 +210,17 @@ class _EventTicketsScreenState extends State<EventTicketsScreen> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.warning_amber_rounded,
-                                  color: Colors.pink),
+                              const Icon(
+                                Icons.warning_amber_rounded,
+                                color: Colors.pink,
+                              ),
                               const SizedBox(width: 8),
-                              Text(alert,
-                                  style: const TextStyle(fontWeight: FontWeight.w900)),
+                              Text(
+                                alert,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -222,7 +237,9 @@ class _EventTicketsScreenState extends State<EventTicketsScreen> {
                         const SizedBox(height: 8),
                         InkWell(
                           onTap: () async {
-                            await Clipboard.setData(ClipboardData(text: ticket.url));
+                            await Clipboard.setData(
+                              ClipboardData(text: ticket.url),
+                            );
                             if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('URLをコピーしました')),
@@ -230,7 +247,11 @@ class _EventTicketsScreenState extends State<EventTicketsScreen> {
                           },
                           child: Row(
                             children: [
-                              const Icon(Icons.link_rounded, color: _purple, size: 18),
+                              const Icon(
+                                Icons.link_rounded,
+                                color: _purple,
+                                size: 18,
+                              ),
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
@@ -243,16 +264,20 @@ class _EventTicketsScreenState extends State<EventTicketsScreen> {
                                   ),
                                 ),
                               ),
-                              const Text('コピー',
-                                  style: TextStyle(color: _purple, fontSize: 12)),
+                              const Text(
+                                'コピー',
+                                style: TextStyle(color: _purple, fontSize: 12),
+                              ),
                             ],
                           ),
                         ),
                       ],
                       if (ticket.memo.trim().isNotEmpty) ...[
                         const SizedBox(height: 8),
-                        Text(ticket.memo,
-                            style: const TextStyle(color: Color(0xFF716B78))),
+                        Text(
+                          ticket.memo,
+                          style: const TextStyle(color: Color(0xFF716B78)),
+                        ),
                       ],
                       const SizedBox(height: 8),
                       Row(
@@ -356,11 +381,11 @@ class _TicketEditScreenState extends State<TicketEditScreen> {
       backgroundColor: _background,
       appBar: AppBar(
         backgroundColor: _background,
-        title: Text(widget.initial == null ? 'チケット追加' : 'チケット編集',
-            style: const TextStyle(fontWeight: FontWeight.w900)),
-        actions: [
-          TextButton(onPressed: _save, child: const Text('保存')),
-        ],
+        title: Text(
+          widget.initial == null ? 'チケット追加' : 'チケット編集',
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
+        actions: [TextButton(onPressed: _save, child: const Text('保存'))],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -411,9 +436,10 @@ class _TicketEditScreenState extends State<TicketEditScreen> {
           TextField(
             controller: _url,
             keyboardType: TextInputType.url,
-            decoration: _decoration('URL', icon: Icons.link_rounded).copyWith(
-              hintText: '購入・申込・電子チケット・公式案内など',
-            ),
+            decoration: _decoration(
+              'URL',
+              icon: Icons.link_rounded,
+            ).copyWith(hintText: '購入・申込・電子チケット・公式案内など'),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -434,11 +460,13 @@ class EventChekiScreen extends StatefulWidget {
     required this.event,
     required this.oshis,
     required this.onChanged,
+    this.preselectedMember,
   });
 
   final OshiEvent event;
   final List<Oshi> oshis;
   final Future<void> Function() onChanged;
+  final String? preselectedMember;
 
   @override
   State<EventChekiScreen> createState() => _EventChekiScreenState();
@@ -481,49 +509,55 @@ class _EventChekiScreenState extends State<EventChekiScreen> {
         builder: (_) => ChekiPurchaseEditScreen(
           event: widget.event,
           oshis: widget.oshis,
+          preselectedMember: widget.preselectedMember,
         ),
       ),
     );
     if (draft == null) return;
-
-    ChekiSourcePhoto? source;
-    if (draft.sourcePhotoBase64 != null) {
-      source = ChekiSourcePhoto(
-        eventId: widget.event.id,
-        imageBase64: draft.sourcePhotoBase64!,
-        detectedCount: draft.quantity,
-      );
-      await ActivityStorage.saveChekiSource(source);
-    }
 
     final purchase = ChekiPurchase(
       eventId: widget.event.id,
       quantity: draft.quantity,
       totalAmount: draft.totalAmount,
       purchasedAt: DateTime.now(),
-      sourcePhotoId: source?.id,
     );
-    await ActivityStorage.saveChekiPurchase(purchase);
-
-    var overallIndex = 0;
+    final records = <ChekiRecord>[];
+    var index = 0;
     for (final breakdown in draft.breakdowns) {
       for (var i = 0; i < breakdown.quantity; i++) {
-        overallIndex++;
-        await ActivityStorage.saveCheki(
+        records.add(
           ChekiRecord(
             eventId: widget.event.id,
             purchaseId: purchase.id,
-            sourcePhotoId: source?.id,
             shotAt: DateTime.now(),
             memberNames: List<String>.from(draft.memberNames),
             type: breakdown.type,
-            imageBase64: draft.quantity == 1 ? draft.sourcePhotoBase64 : null,
-            memo: draft.quantity > 1
-                ? '${breakdown.type.label} $overallIndex/${draft.quantity}'
-                : '',
+            imageBase64: index < draft.imagesBase64.length
+                ? draft.imagesBase64[index]
+                : null,
+            amount: draft.totalAmount == null
+                ? null
+                : (draft.totalAmount! ~/ draft.quantity) +
+                      (index < draft.totalAmount! % draft.quantity ? 1 : 0),
           ),
         );
+        index++;
       }
+    }
+    try {
+      await ActivityStorage.saveChekiPurchase(purchase);
+      await ActivityStorage.saveChekiBatch(records);
+    } catch (_) {
+      try {
+        await ActivityStorage.deleteChekiPurchase(purchase.id);
+      } catch (_) {}
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('保存できませんでした。写真を減らすか、画像サイズを小さくして再試行してください'),
+        ),
+      );
+      return;
     }
 
     await widget.onChanged();
@@ -547,7 +581,15 @@ class _EventChekiScreenState extends State<EventChekiScreen> {
       ),
     );
     if (result == null) return;
-    await ActivityStorage.saveCheki(result);
+    try {
+      await ActivityStorage.saveCheki(result);
+    } catch (_) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('チェキを保存できませんでした。保存容量を確認してください')),
+        );
+      return;
+    }
     await widget.onChanged();
     await _reload();
   }
@@ -613,16 +655,34 @@ class _EventChekiScreenState extends State<EventChekiScreen> {
               buttonText: 'チェキを記録',
               onPressed: _add,
             )
-          else
+          else ...[
+            ..._chekis.map(
+              (cheki) => Card(
+                child: ListTile(
+                  leading: cheki.imageBase64 == null
+                      ? const Icon(Icons.photo_outlined, color: _purple)
+                      : Image.memory(
+                          base64Decode(cheki.imageBase64!),
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                        ),
+                  title: Text(cheki.type.label),
+                  subtitle: Text(cheki.memberNames.join('・')),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _editCheki(cheki),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text('購入記録', style: TextStyle(fontWeight: FontWeight.w900)),
             ..._purchases.map((purchase) {
-              final records =
-                  _chekis.where((e) => e.purchaseId == purchase.id).toList();
               final source = purchase.sourcePhotoId == null
                   ? null
                   : _sources.cast<ChekiSourcePhoto?>().firstWhere(
-                        (e) => e?.id == purchase.sourcePhotoId,
-                        orElse: () => null,
-                      );
+                      (e) => e?.id == purchase.sourcePhotoId,
+                      orElse: () => null,
+                    );
               return Card(
                 elevation: 0,
                 color: Colors.white,
@@ -638,12 +698,18 @@ class _EventChekiScreenState extends State<EventChekiScreen> {
                     children: [
                       Row(
                         children: [
-                          Text('${purchase.quantity}枚',
-                              style: const TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.w900)),
+                          Text(
+                            '${purchase.quantity}枚',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
                           const SizedBox(width: 10),
-                          Text(_money(purchase.totalAmount),
-                              style: const TextStyle(color: _purple)),
+                          Text(
+                            _money(purchase.totalAmount),
+                            style: const TextStyle(color: _purple),
+                          ),
                           const Spacer(),
                           IconButton(
                             onPressed: () => _deletePurchase(purchase),
@@ -652,73 +718,24 @@ class _EventChekiScreenState extends State<EventChekiScreen> {
                         ],
                       ),
                       if (purchase.unitPrice != null)
-                        Text('1枚あたり ${_money(purchase.unitPrice)}',
-                            style: const TextStyle(
-                                color: Color(0xFF716B78), fontSize: 12)),
+                        Text(
+                          '1枚あたり ${_money(purchase.unitPrice)}',
+                          style: const TextStyle(
+                            color: Color(0xFF716B78),
+                            fontSize: 12,
+                          ),
+                        ),
                       if (source != null) ...[
                         const SizedBox(height: 10),
                         _SourcePhotoCard(source: source),
                       ],
                       const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: records
-                            .map(
-                              (cheki) => InkWell(
-                                borderRadius: BorderRadius.circular(14),
-                                onTap: () => _editCheki(cheki),
-                                child: Container(
-                                  width: 104,
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: _lightPurple,
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      if (cheki.imageBase64 != null)
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(8),
-                                          child: Image.memory(
-                                            base64Decode(cheki.imageBase64!),
-                                            width: 54,
-                                            height: 54,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        )
-                                      else
-                                        Icon(
-                                          cheki.isFavorite
-                                              ? Icons.favorite_rounded
-                                              : Icons.photo_outlined,
-                                          color: _purple,
-                                        ),
-                                      const SizedBox(height: 4),
-                                      Text(cheki.type.label,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.w800)),
-                                      Text(
-                                        cheki.memberNames.isEmpty
-                                            ? 'メンバー未設定'
-                                            : cheki.memberNames.join('・'),
-                                        maxLines: 2,
-                                        textAlign: TextAlign.center,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 11),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                      ),
                     ],
                   ),
                 ),
               );
             }),
+          ],
         ],
       ),
     );
@@ -747,7 +764,12 @@ class _SourcePhotoCard extends StatelessWidget {
           if (bytes != null)
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.memory(bytes, width: 72, height: 72, fit: BoxFit.cover),
+              child: Image.memory(
+                bytes,
+                width: 72,
+                height: 72,
+                fit: BoxFit.cover,
+              ),
             )
           else
             const SizedBox(
@@ -760,8 +782,10 @@ class _SourcePhotoCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('まとめ写真を保存済み',
-                    style: TextStyle(fontWeight: FontWeight.w900)),
+                Text(
+                  'まとめ写真を保存済み',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
                 SizedBox(height: 4),
                 Text(
                   '自動分割は外注機能を接続予定。今は個別チェキのデータだけ先に作成します。',
@@ -777,10 +801,7 @@ class _SourcePhotoCard extends StatelessWidget {
 }
 
 class ChekiBreakdownDraft {
-  const ChekiBreakdownDraft({
-    required this.type,
-    required this.quantity,
-  });
+  const ChekiBreakdownDraft({required this.type, required this.quantity});
 
   final ChekiType type;
   final int quantity;
@@ -791,22 +812,21 @@ class ChekiPurchaseDraft {
     required this.breakdowns,
     this.totalAmount,
     required this.memberNames,
-    this.sourcePhotoBase64,
+    this.imagesBase64 = const [],
   });
 
   final List<ChekiBreakdownDraft> breakdowns;
   final int? totalAmount;
   final List<String> memberNames;
-  final String? sourcePhotoBase64;
+  final List<String> imagesBase64;
 
-  int get quantity => breakdowns.fold<int>(0, (sum, value) => sum + value.quantity);
+  int get quantity =>
+      breakdowns.fold<int>(0, (sum, value) => sum + value.quantity);
 }
 
 class _ChekiBreakdownInput {
-  _ChekiBreakdownInput({
-    this.type = ChekiType.twoShot,
-    int quantity = 1,
-  }) : quantityController = TextEditingController(text: quantity.toString());
+  _ChekiBreakdownInput({this.type = ChekiType.twoShot, int quantity = 1})
+    : quantityController = TextEditingController(text: quantity.toString());
 
   ChekiType type;
   final TextEditingController quantityController;
@@ -819,13 +839,16 @@ class ChekiPurchaseEditScreen extends StatefulWidget {
     super.key,
     required this.event,
     required this.oshis,
+    this.preselectedMember,
   });
 
   final OshiEvent event;
   final List<Oshi> oshis;
+  final String? preselectedMember;
 
   @override
-  State<ChekiPurchaseEditScreen> createState() => _ChekiPurchaseEditScreenState();
+  State<ChekiPurchaseEditScreen> createState() =>
+      _ChekiPurchaseEditScreenState();
 }
 
 class _ChekiPurchaseEditScreenState extends State<ChekiPurchaseEditScreen> {
@@ -835,12 +858,19 @@ class _ChekiPurchaseEditScreenState extends State<ChekiPurchaseEditScreen> {
   final List<_ChekiBreakdownInput> _breakdowns = [
     _ChekiBreakdownInput(type: ChekiType.twoShot, quantity: 1),
   ];
-  String? _sourcePhotoBase64;
+  List<String> _imagesBase64 = [];
 
   int get _totalQuantity => _breakdowns.fold<int>(
-        0,
-        (sum, row) => sum + (int.tryParse(row.quantityController.text.trim()) ?? 0),
-      );
+    0,
+    (sum, row) => sum + (int.tryParse(row.quantityController.text.trim()) ?? 0),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.preselectedMember != null)
+      _members.add(widget.preselectedMember!);
+  }
 
   @override
   void dispose() {
@@ -853,15 +883,18 @@ class _ChekiPurchaseEditScreenState extends State<ChekiPurchaseEditScreen> {
   }
 
   Future<void> _pickSourcePhoto() async {
-    final file = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 70,
-      maxWidth: 1400,
+    final files = await ImagePicker().pickMultiImage(
+      imageQuality: 55,
+      maxWidth: 900,
+      maxHeight: 1200,
     );
-    if (file == null) return;
-    final bytes = await file.readAsBytes();
+    if (files.isEmpty) return;
+    final images = <String>[];
+    for (final file in files) {
+      images.add(base64Encode(await file.readAsBytes()));
+    }
     if (!mounted) return;
-    setState(() => _sourcePhotoBase64 = base64Encode(bytes));
+    setState(() => _imagesBase64 = images);
   }
 
   void _addExtra() {
@@ -895,20 +928,28 @@ class _ChekiPurchaseEditScreenState extends State<ChekiPurchaseEditScreen> {
       breakdowns.add(ChekiBreakdownDraft(type: row.type, quantity: quantity));
     }
 
-    final quantity = breakdowns.fold<int>(0, (sum, value) => sum + value.quantity);
+    final quantity = breakdowns.fold<int>(
+      0,
+      (sum, value) => sum + value.quantity,
+    );
     if (quantity <= 0) {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('チェキの枚数を入力してください')));
       return;
     }
 
+    if (_imagesBase64.length > quantity) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('選択した写真が枚数より多いです')));
+      return;
+    }
     Navigator.pop(
       context,
       ChekiPurchaseDraft(
         breakdowns: breakdowns,
         totalAmount: int.tryParse(_amount.text.replaceAll(',', '').trim()),
         memberNames: _members.toList(),
-        sourcePhotoBase64: _sourcePhotoBase64,
+        imagesBase64: List<String>.from(_imagesBase64),
       ),
     );
   }
@@ -920,7 +961,10 @@ class _ChekiPurchaseEditScreenState extends State<ChekiPurchaseEditScreen> {
       backgroundColor: _background,
       appBar: AppBar(
         backgroundColor: _background,
-        title: const Text('チェキを記録', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text(
+          'チェキを記録',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
         actions: [TextButton(onPressed: _save, child: const Text('保存'))],
       ),
       body: ListView(
@@ -945,7 +989,10 @@ class _ChekiPurchaseEditScreenState extends State<ChekiPurchaseEditScreen> {
                       const Spacer(),
                       Text(
                         '${_totalQuantity}枚',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ],
                   ),
@@ -956,7 +1003,10 @@ class _ChekiPurchaseEditScreenState extends State<ChekiPurchaseEditScreen> {
                 child: TextField(
                   controller: _amount,
                   keyboardType: TextInputType.number,
-                  decoration: _decoration('合計金額', icon: Icons.currency_yen_rounded),
+                  decoration: _decoration(
+                    '合計金額',
+                    icon: Icons.currency_yen_rounded,
+                  ),
                 ),
               ),
             ],
@@ -965,7 +1015,10 @@ class _ChekiPurchaseEditScreenState extends State<ChekiPurchaseEditScreen> {
           Row(
             children: [
               const Expanded(
-                child: Text('チェキ内訳', style: TextStyle(fontWeight: FontWeight.w900)),
+                child: Text(
+                  'チェキ内訳',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
               ),
               TextButton.icon(
                 onPressed: _addBreakdown,
@@ -993,9 +1046,15 @@ class _ChekiPurchaseEditScreenState extends State<ChekiPurchaseEditScreen> {
                       value: row.type,
                       decoration: _decoration('種類'),
                       items: ChekiType.values
-                          .map((e) => DropdownMenuItem(value: e, child: Text(e.label)))
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e,
+                              child: Text(e.label),
+                            ),
+                          )
                           .toList(),
-                      onChanged: (value) => setState(() => row.type = value ?? row.type),
+                      onChanged: (value) =>
+                          setState(() => row.type = value ?? row.type),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -1021,7 +1080,10 @@ class _ChekiPurchaseEditScreenState extends State<ChekiPurchaseEditScreen> {
             );
           }),
           const SizedBox(height: 8),
-          const Text('写っているメンバー', style: TextStyle(fontWeight: FontWeight.w900)),
+          const Text(
+            '写っているメンバー',
+            style: TextStyle(fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -1032,7 +1094,9 @@ class _ChekiPurchaseEditScreenState extends State<ChekiPurchaseEditScreen> {
                   selected: _members.contains(oshi.name),
                   label: Text(oshi.name),
                   onSelected: (selected) => setState(() {
-                    selected ? _members.add(oshi.name) : _members.remove(oshi.name);
+                    selected
+                        ? _members.add(oshi.name)
+                        : _members.remove(oshi.name);
                   }),
                 ),
               ),
@@ -1052,28 +1116,42 @@ class _ChekiPurchaseEditScreenState extends State<ChekiPurchaseEditScreen> {
               Expanded(
                 child: TextField(
                   controller: _extraMember,
-                  decoration: _decoration('未登録メンバー名', icon: Icons.person_add_alt_1),
+                  decoration: _decoration(
+                    '未登録メンバー名',
+                    icon: Icons.person_add_alt_1,
+                  ),
                   onSubmitted: (_) => _addExtra(),
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton.filledTonal(onPressed: _addExtra, icon: const Icon(Icons.add)),
+              IconButton.filledTonal(
+                onPressed: _addExtra,
+                icon: const Icon(Icons.add),
+              ),
             ],
           ),
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: _pickSourcePhoto,
-            icon: Icon(_sourcePhotoBase64 == null
-                ? Icons.add_photo_alternate_outlined
-                : Icons.check_circle_rounded),
-            label: Text(_sourcePhotoBase64 == null
-                ? 'まとめ写真を選ぶ（任意）'
-                : 'まとめ写真を選択済み'),
+            icon: Icon(
+              _imagesBase64.isEmpty
+                  ? Icons.add_photo_alternate_outlined
+                  : Icons.check_circle_rounded,
+            ),
+            label: Text(
+              _imagesBase64.isEmpty
+                  ? 'チェキ写真を複数選ぶ（任意）'
+                  : '${_imagesBase64.length}枚選択済み・選び直す',
+            ),
           ),
           const SizedBox(height: 8),
           const Text(
-            '種類ごとに枚数を分けて登録できます。複数チェキの自動分割は外注実装予定で、今は元画像を保持しながら個別チェキデータを作成します。',
-            style: TextStyle(fontSize: 12, color: Color(0xFF716B78), height: 1.45),
+            '選んだ写真を先頭から1枚ずつ個別チェキに割り当てます。写真なしのチェキは後から追加できます。',
+            style: TextStyle(
+              fontSize: 12,
+              color: Color(0xFF716B78),
+              height: 1.45,
+            ),
           ),
         ],
       ),
@@ -1103,6 +1181,7 @@ class _ChekiRecordEditScreenState extends State<ChekiRecordEditScreen> {
   late ChekiType _type;
   late Set<String> _members;
   late final TextEditingController _memo;
+  late final TextEditingController _amount;
   late bool _favorite;
   String? _imageBase64;
 
@@ -1112,6 +1191,9 @@ class _ChekiRecordEditScreenState extends State<ChekiRecordEditScreen> {
     _type = widget.initial.type;
     _members = widget.initial.memberNames.toSet();
     _memo = TextEditingController(text: widget.initial.memo);
+    _amount = TextEditingController(
+      text: widget.initial.amount?.toString() ?? '',
+    );
     _favorite = widget.initial.isFavorite;
     _imageBase64 = widget.initial.imageBase64;
   }
@@ -1119,6 +1201,7 @@ class _ChekiRecordEditScreenState extends State<ChekiRecordEditScreen> {
   @override
   void dispose() {
     _memo.dispose();
+    _amount.dispose();
     super.dispose();
   }
 
@@ -1146,6 +1229,9 @@ class _ChekiRecordEditScreenState extends State<ChekiRecordEditScreen> {
           oshis: widget.oshis,
           chekis: chekis,
           preselectedChekiIds: [widget.initial.id],
+          preselectedMember: widget.initial.memberNames.isEmpty
+              ? null
+              : widget.initial.memberNames.first,
         ),
       ),
     );
@@ -1153,9 +1239,9 @@ class _ChekiRecordEditScreenState extends State<ChekiRecordEditScreen> {
     await ActivityStorage.saveTalk(talk);
     await widget.onChanged();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('このチェキにトークログを紐付けました')),
-    );
+    setState(() {});
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('このチェキにトークログを紐付けました')));
   }
 
   void _save() {
@@ -1171,6 +1257,7 @@ class _ChekiRecordEditScreenState extends State<ChekiRecordEditScreen> {
         memberNames: _members.toList(),
         type: _type,
         imageBase64: _imageBase64,
+        amount: int.tryParse(_amount.text.replaceAll(',', '').trim()),
         memo: _memo.text.trim(),
         isFavorite: _favorite,
         talkLogIds: List<String>.from(initial.talkLogIds),
@@ -1185,7 +1272,10 @@ class _ChekiRecordEditScreenState extends State<ChekiRecordEditScreen> {
       backgroundColor: _background,
       appBar: AppBar(
         backgroundColor: _background,
-        title: const Text('チェキ詳細', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text(
+          'チェキ詳細',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
         actions: [TextButton(onPressed: _save, child: const Text('保存'))],
       ),
       body: ListView(
@@ -1214,7 +1304,11 @@ class _ChekiRecordEditScreenState extends State<ChekiRecordEditScreen> {
                   const SizedBox(
                     height: 120,
                     child: Center(
-                      child: Icon(Icons.photo_outlined, size: 46, color: _purple),
+                      child: Icon(
+                        Icons.photo_outlined,
+                        size: 46,
+                        color: _purple,
+                      ),
                     ),
                   ),
                 const SizedBox(height: 8),
@@ -1228,6 +1322,7 @@ class _ChekiRecordEditScreenState extends State<ChekiRecordEditScreen> {
           ),
           const SizedBox(height: 14),
           DropdownButtonFormField<ChekiType>(
+            isExpanded: true,
             value: _type,
             decoration: _decoration('種類'),
             items: ChekiType.values
@@ -1246,13 +1341,21 @@ class _ChekiRecordEditScreenState extends State<ChekiRecordEditScreen> {
                     selected: _members.contains(oshi.name),
                     label: Text(oshi.name),
                     onSelected: (selected) => setState(() {
-                      selected ? _members.add(oshi.name) : _members.remove(oshi.name);
+                      selected
+                          ? _members.add(oshi.name)
+                          : _members.remove(oshi.name);
                     }),
                   ),
                 )
                 .toList(),
           ),
           const SizedBox(height: 14),
+          TextField(
+            controller: _amount,
+            keyboardType: TextInputType.number,
+            decoration: _decoration('このチェキの金額（編集可）'),
+          ),
+          const SizedBox(height: 10),
           SwitchListTile(
             value: _favorite,
             activeColor: _purple,
@@ -1266,457 +1369,53 @@ class _ChekiRecordEditScreenState extends State<ChekiRecordEditScreen> {
             icon: const Icon(Icons.chat_bubble_outline_rounded),
             label: const Text('このチェキのトークを記録'),
           ),
+          FutureBuilder<List<TalkLog>>(
+            future: ActivityStorage.loadTalks(),
+            builder: (context, snapshot) {
+              final related = (snapshot.data ?? <TalkLog>[])
+                  .where((talk) => talk.chekiIds.contains(widget.initial.id))
+                  .toList();
+              return Column(
+                children: related
+                    .map(
+                      (talk) => ListTile(
+                        title: Text(talk.sessionLabel),
+                        subtitle: Text(
+                          talk.messages.isEmpty
+                              ? 'トークを開く'
+                              : talk.messages.last.text,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        onTap: () async {
+                          final updated = await Navigator.of(context)
+                              .push<TalkLog>(
+                                MaterialPageRoute(
+                                  builder: (_) => TalkEditScreen(
+                                    initial: talk,
+                                    event: widget.event,
+                                    oshis: widget.oshis,
+                                    chekis: <ChekiRecord>[widget.initial],
+                                  ),
+                                ),
+                              );
+                          if (updated != null) {
+                            await ActivityStorage.saveTalk(updated);
+                            await widget.onChanged();
+                            if (mounted) setState(() {});
+                          }
+                        },
+                      ),
+                    )
+                    .toList(),
+              );
+            },
+          ),
           const SizedBox(height: 12),
           TextField(
             controller: _memo,
             minLines: 3,
             maxLines: 8,
-            decoration: _decoration('メモ'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class EventTalkScreen extends StatefulWidget {
-  const EventTalkScreen({
-    super.key,
-    required this.event,
-    required this.oshis,
-    required this.onChanged,
-  });
-
-  final OshiEvent event;
-  final List<Oshi> oshis;
-  final Future<void> Function() onChanged;
-
-  @override
-  State<EventTalkScreen> createState() => _EventTalkScreenState();
-}
-
-class _EventTalkScreenState extends State<EventTalkScreen> {
-  List<TalkLog> _talks = [];
-  List<ChekiRecord> _chekis = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _reload();
-  }
-
-  Future<void> _reload() async {
-    final result = await Future.wait([
-      ActivityStorage.loadTalks(),
-      ActivityStorage.loadChekis(),
-    ]);
-    if (!mounted) return;
-    setState(() {
-      _talks = (result[0] as List<TalkLog>)
-          .where((e) => e.eventId == widget.event.id)
-          .toList()
-        ..sort((a, b) => b.talkedAt.compareTo(a.talkedAt));
-      _chekis = (result[1] as List<ChekiRecord>)
-          .where((e) => e.eventId == widget.event.id)
-          .toList();
-    });
-  }
-
-  Future<void> _edit([TalkLog? initial, List<String>? preselectedChekiIds]) async {
-    final result = await Navigator.of(context).push<TalkLog>(
-      MaterialPageRoute(
-        builder: (_) => TalkEditScreen(
-          event: widget.event,
-          oshis: widget.oshis,
-          chekis: _chekis,
-          initial: initial,
-          preselectedChekiIds: preselectedChekiIds,
-        ),
-      ),
-    );
-    if (result == null) return;
-    await ActivityStorage.saveTalk(result);
-    await widget.onChanged();
-    await _reload();
-  }
-
-  Future<void> _delete(TalkLog talk) async {
-    await ActivityStorage.deleteTalk(talk.id);
-    await widget.onChanged();
-    await _reload();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final totalMessages = _talks.fold<int>(0, (sum, e) => sum + e.messageCount);
-    return Scaffold(
-      backgroundColor: _background,
-      appBar: AppBar(
-        backgroundColor: _background,
-        title: const Text('トークログ', style: TextStyle(fontWeight: FontWeight.w900)),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: _purple,
-        foregroundColor: Colors.white,
-        onPressed: () => _edit(),
-        icon: const Icon(Icons.add_comment_rounded),
-        label: const Text('トーク追加'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-        children: [
-          _SummaryStrip(
-            values: [
-              ('トーク', '${_talks.length}回'),
-              ('発言', '$totalMessages件'),
-              ('チェキ紐付け', '${_talks.fold<int>(0, (sum, e) => sum + e.chekiIds.length)}件'),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (_talks.isEmpty)
-            _EmptyCard(
-              icon: Icons.chat_bubble_outline_rounded,
-              text: 'トークログはまだありません',
-              buttonText: 'トークを記録',
-              onPressed: () => _edit(),
-            )
-          else
-            ..._talks.map(
-              (talk) => Card(
-                elevation: 0,
-                color: Colors.white,
-                margin: const EdgeInsets.only(bottom: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  side: const BorderSide(color: _border),
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(14),
-                  leading: const CircleAvatar(
-                    backgroundColor: _lightPurple,
-                    child: Icon(Icons.forum_rounded, color: _purple),
-                  ),
-                  title: Text(
-                    talk.participantNames.isEmpty
-                        ? 'メンバー未設定'
-                        : talk.participantNames.join(' × '),
-                    style: const TextStyle(fontWeight: FontWeight.w900),
-                  ),
-                  subtitle: Text(
-                    [
-                      if (talk.sessionLabel.trim().isNotEmpty) talk.sessionLabel,
-                      '${talk.messageCount}発言',
-                      if (talk.chekiIds.isNotEmpty) 'チェキ${talk.chekiIds.length}枚',
-                    ].join('・'),
-                  ),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'edit') _edit(talk);
-                      if (value == 'delete') _delete(talk);
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'edit', child: Text('編集')),
-                      PopupMenuItem(value: 'delete', child: Text('削除')),
-                    ],
-                  ),
-                  onTap: () => _edit(talk),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MessageDraft {
-  _MessageDraft({required this.speaker, String text = ''})
-      : controller = TextEditingController(text: text);
-
-  String speaker;
-  final TextEditingController controller;
-}
-
-class TalkEditScreen extends StatefulWidget {
-  const TalkEditScreen({
-    super.key,
-    required this.event,
-    required this.oshis,
-    required this.chekis,
-    this.initial,
-    this.preselectedChekiIds,
-  });
-
-  final OshiEvent event;
-  final List<Oshi> oshis;
-  final List<ChekiRecord> chekis;
-  final TalkLog? initial;
-  final List<String>? preselectedChekiIds;
-
-  @override
-  State<TalkEditScreen> createState() => _TalkEditScreenState();
-}
-
-class _TalkEditScreenState extends State<TalkEditScreen> {
-  late Set<String> _participants;
-  late Set<String> _chekiIds;
-  late final TextEditingController _session;
-  late final TextEditingController _ticketCount;
-  late final TextEditingController _memo;
-  final _extraMember = TextEditingController();
-  final List<_MessageDraft> _messages = [];
-
-  List<String> get _speakerOptions => ['自分', ..._participants];
-
-  @override
-  void initState() {
-    super.initState();
-    final initial = widget.initial;
-    _participants = (initial?.participantNames ?? <String>[]).toSet();
-    _chekiIds = (initial?.chekiIds ?? widget.preselectedChekiIds ?? <String>[]).toSet();
-    _session = TextEditingController(text: initial?.sessionLabel ?? '');
-    _ticketCount = TextEditingController(text: initial?.ticketCount?.toString() ?? '');
-    _memo = TextEditingController(text: initial?.memo ?? '');
-    if (initial == null || initial.messages.isEmpty) {
-      _messages.add(_MessageDraft(speaker: '自分'));
-    } else {
-      for (final message in initial.messages) {
-        _messages.add(_MessageDraft(speaker: message.speaker, text: message.text));
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _session.dispose();
-    _ticketCount.dispose();
-    _memo.dispose();
-    _extraMember.dispose();
-    for (final message in _messages) {
-      message.controller.dispose();
-    }
-    super.dispose();
-  }
-
-  void _addExtraMember() {
-    final name = _extraMember.text.trim();
-    if (name.isEmpty) return;
-    setState(() {
-      _participants.add(name);
-      _extraMember.clear();
-    });
-  }
-
-  void _addMessage() {
-    final options = _speakerOptions;
-    setState(() {
-      _messages.add(
-        _MessageDraft(speaker: options.length > 1 ? options[1] : '自分'),
-      );
-    });
-  }
-
-  void _save() {
-    final initial = widget.initial;
-    final messages = <TalkMessage>[];
-    for (var i = 0; i < _messages.length; i++) {
-      final draft = _messages[i];
-      final text = draft.controller.text.trim();
-      if (text.isEmpty) continue;
-      messages.add(TalkMessage(speaker: draft.speaker, text: text, order: i));
-    }
-    Navigator.pop(
-      context,
-      TalkLog(
-        id: initial?.id,
-        eventId: widget.event.id,
-        participantNames: _participants.toList(),
-        talkedAt: initial?.talkedAt ?? DateTime.now(),
-        sessionLabel: _session.text.trim(),
-        ticketCount: int.tryParse(_ticketCount.text.trim()),
-        chekiIds: _chekiIds.toList(),
-        memo: _memo.text.trim(),
-        messages: messages,
-        createdAt: initial?.createdAt,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final activeOshis = widget.oshis.where((e) => !e.isGraduated).toList();
-    return Scaffold(
-      backgroundColor: _background,
-      appBar: AppBar(
-        backgroundColor: _background,
-        title: Text(widget.initial == null ? 'トークを記録' : 'トークを編集',
-            style: const TextStyle(fontWeight: FontWeight.w900)),
-        actions: [TextButton(onPressed: _save, child: const Text('保存'))],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text('参加メンバー', style: TextStyle(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ...activeOshis.map(
-                (oshi) => FilterChip(
-                  selected: _participants.contains(oshi.name),
-                  label: Text(oshi.name),
-                  onSelected: (value) => setState(() {
-                    value
-                        ? _participants.add(oshi.name)
-                        : _participants.remove(oshi.name);
-                  }),
-                ),
-              ),
-              ..._participants
-                  .where((name) => activeOshis.every((e) => e.name != name))
-                  .map(
-                    (name) => InputChip(
-                      label: Text(name),
-                      onDeleted: () => setState(() => _participants.remove(name)),
-                    ),
-                  ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _extraMember,
-                  decoration: _decoration('参加メンバーを追加'),
-                  onSubmitted: (_) => _addExtraMember(),
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton.filledTonal(
-                onPressed: _addExtraMember,
-                icon: const Icon(Icons.person_add_alt_1),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _session,
-                  decoration: _decoration('部・回・特典会枠'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 120,
-                child: TextField(
-                  controller: _ticketCount,
-                  keyboardType: TextInputType.number,
-                  decoration: _decoration('使用枚数'),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (widget.chekis.isNotEmpty) ...[
-            const Text('関連チェキ', style: TextStyle(fontWeight: FontWeight.w900)),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: widget.chekis
-                  .map(
-                    (cheki) => FilterChip(
-                      selected: _chekiIds.contains(cheki.id),
-                      label: Text(
-                        cheki.memberNames.isEmpty
-                            ? cheki.type.label
-                            : '${cheki.memberNames.join('・')} ${cheki.type.label}',
-                      ),
-                      onSelected: (value) => setState(() {
-                        value ? _chekiIds.add(cheki.id) : _chekiIds.remove(cheki.id);
-                      }),
-                    ),
-                  )
-                  .toList(),
-            ),
-            const SizedBox(height: 16),
-          ],
-          Row(
-            children: [
-              const Expanded(
-                child: Text('会話', style: TextStyle(fontWeight: FontWeight.w900)),
-              ),
-              TextButton.icon(
-                onPressed: _addMessage,
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('発言追加'),
-              ),
-            ],
-          ),
-          ...List.generate(_messages.length, (index) {
-            final draft = _messages[index];
-            final options = _speakerOptions;
-            if (!options.contains(draft.speaker)) draft.speaker = '自分';
-            return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: _border),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 105,
-                    child: DropdownButtonFormField<String>(
-                      value: draft.speaker,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        isDense: true,
-                        border: InputBorder.none,
-                      ),
-                      items: options
-                          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                          .toList(),
-                      onChanged: (value) => setState(() => draft.speaker = value ?? '自分'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: draft.controller,
-                      minLines: 1,
-                      maxLines: 4,
-                      decoration: const InputDecoration(
-                        hintText: '話した内容',
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: _messages.length <= 1
-                        ? null
-                        : () => setState(() {
-                              final removed = _messages.removeAt(index);
-                              removed.controller.dispose();
-                            }),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                ],
-              ),
-            );
-          }),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _memo,
-            minLines: 3,
-            maxLines: 6,
             decoration: _decoration('メモ'),
           ),
         ],
@@ -1783,7 +1482,10 @@ class _EventTransactionScreenState extends State<EventTransactionScreen> {
       backgroundColor: _background,
       appBar: AppBar(
         backgroundColor: _background,
-        title: const Text('イベント支出', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text(
+          'イベント支出',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: _purple,
@@ -1827,8 +1529,10 @@ class _EventTransactionScreenState extends State<EventTransactionScreen> {
                       color: _purple,
                     ),
                   ),
-                  title: Text(transaction.category.label,
-                      style: const TextStyle(fontWeight: FontWeight.w900)),
+                  title: Text(
+                    transaction.category.label,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
                   subtitle: Text(
                     [
                       _date(transaction.date),
@@ -1904,10 +1608,7 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
           TransactionCategory.other,
         ];
       case TransactionType.income:
-        return const [
-          TransactionCategory.income,
-          TransactionCategory.other,
-        ];
+        return const [TransactionCategory.income, TransactionCategory.other];
       case TransactionType.refund:
         return const [
           TransactionCategory.ticket,
@@ -1917,10 +1618,7 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
           TransactionCategory.other,
         ];
       case TransactionType.adjustment:
-        return const [
-          TransactionCategory.income,
-          TransactionCategory.other,
-        ];
+        return const [TransactionCategory.income, TransactionCategory.other];
     }
   }
 
@@ -1987,8 +1685,10 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
       backgroundColor: _background,
       appBar: AppBar(
         backgroundColor: _background,
-        title: Text(widget.initial == null ? '入出金を追加' : '入出金を編集',
-            style: const TextStyle(fontWeight: FontWeight.w900)),
+        title: Text(
+          widget.initial == null ? '入出金を追加' : '入出金を編集',
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
         actions: [TextButton(onPressed: _save, child: const Text('保存'))],
       ),
       body: ListView(
@@ -2001,7 +1701,10 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
               ButtonSegment(value: TransactionType.expense, label: Text('出金')),
               ButtonSegment(value: TransactionType.income, label: Text('入金')),
               ButtonSegment(value: TransactionType.refund, label: Text('返金')),
-              ButtonSegment(value: TransactionType.adjustment, label: Text('調整')),
+              ButtonSegment(
+                value: TransactionType.adjustment,
+                label: Text('調整'),
+              ),
             ],
             selected: {_type},
             showSelectedIcon: false,
@@ -2014,7 +1717,8 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
             items: categories
                 .map((e) => DropdownMenuItem(value: e, child: Text(e.label)))
                 .toList(),
-            onChanged: (value) => setState(() => _category = value ?? _category),
+            onChanged: (value) =>
+                setState(() => _category = value ?? _category),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -2042,8 +1746,10 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
           ),
           const SizedBox(height: 12),
           if (widget.oshis.isNotEmpty) ...[
-            const Text('関連する推し（任意）',
-                style: TextStyle(fontWeight: FontWeight.w900)),
+            const Text(
+              '関連する推し（任意）',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
             Wrap(
               spacing: 8,
               runSpacing: 4,
@@ -2053,7 +1759,9 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
                       selected: _members.contains(oshi.name),
                       label: Text(oshi.name),
                       onSelected: (selected) => setState(() {
-                        selected ? _members.add(oshi.name) : _members.remove(oshi.name);
+                        selected
+                            ? _members.add(oshi.name)
+                            : _members.remove(oshi.name);
                       }),
                     ),
                   )
@@ -2088,7 +1796,8 @@ class RecurringTransactionsScreen extends StatefulWidget {
       _RecurringTransactionsScreenState();
 }
 
-class _RecurringTransactionsScreenState extends State<RecurringTransactionsScreen> {
+class _RecurringTransactionsScreenState
+    extends State<RecurringTransactionsScreen> {
   List<RecurringTransaction> _values = [];
 
   @override
@@ -2127,8 +1836,14 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
         title: const Text('定期入出金を削除しますか？'),
         content: const Text('すでに家計簿へ作成済みの履歴は残ります。'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('キャンセル')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('削除')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('キャンセル'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('削除'),
+          ),
         ],
       ),
     );
@@ -2144,7 +1859,10 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
       backgroundColor: _background,
       appBar: AppBar(
         backgroundColor: _background,
-        title: const Text('定期入出金', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text(
+          '定期入出金',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: _purple,
@@ -2178,19 +1896,28 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
                     leading: CircleAvatar(
                       backgroundColor: _lightPurple,
                       foregroundColor: _purple,
-                      child: Icon(value.type == TransactionType.income
-                          ? Icons.south_west_rounded
-                          : Icons.north_east_rounded),
+                      child: Icon(
+                        value.type == TransactionType.income
+                            ? Icons.south_west_rounded
+                            : Icons.north_east_rounded,
+                      ),
                     ),
                     title: Row(
                       children: [
                         Expanded(
-                          child: Text(value.name,
-                              style: const TextStyle(fontWeight: FontWeight.w900)),
+                          child: Text(
+                            value.name,
+                            style: const TextStyle(fontWeight: FontWeight.w900),
+                          ),
                         ),
                         if (!value.enabled)
-                          const Text('停止中',
-                              style: TextStyle(fontSize: 11, color: Colors.black45)),
+                          const Text(
+                            '停止中',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black45,
+                            ),
+                          ),
                       ],
                     ),
                     subtitle: Text(
@@ -2199,8 +1926,10 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(_money(value.amount),
-                            style: const TextStyle(fontWeight: FontWeight.w900)),
+                        Text(
+                          _money(value.amount),
+                          style: const TextStyle(fontWeight: FontWeight.w900),
+                        ),
                         PopupMenuButton<String>(
                           onSelected: (action) {
                             if (action == 'delete') _delete(value);
@@ -2256,7 +1985,8 @@ class _RecurringTransactionEditScreenState
     _type = initial?.type == TransactionType.income
         ? TransactionType.income
         : TransactionType.expense;
-    _category = initial?.category ??
+    _category =
+        initial?.category ??
         (_type == TransactionType.income
             ? TransactionCategory.income
             : TransactionCategory.fanclub);
@@ -2319,9 +2049,8 @@ class _RecurringTransactionEditScreenState
     final name = _name.text.trim();
     final amount = int.tryParse(_amount.text.replaceAll(',', '').trim());
     if (name.isEmpty || amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('名称と金額を入力してください')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('名称と金額を入力してください')));
       return;
     }
     final initial = widget.initial;
@@ -2335,7 +2064,9 @@ class _RecurringTransactionEditScreenState
         category: _category,
         frequency: _frequency,
         dayOfMonth: _dayOfMonth,
-        monthOfYear: _frequency == RecurringFrequency.yearly ? _monthOfYear : null,
+        monthOfYear: _frequency == RecurringFrequency.yearly
+            ? _monthOfYear
+            : null,
         startDate: _startDate,
         endDate: _endDate,
         enabled: _enabled,
@@ -2352,8 +2083,10 @@ class _RecurringTransactionEditScreenState
       backgroundColor: _background,
       appBar: AppBar(
         backgroundColor: _background,
-        title: Text(widget.initial == null ? '定期入出金を追加' : '定期入出金を編集',
-            style: const TextStyle(fontWeight: FontWeight.w900)),
+        title: Text(
+          widget.initial == null ? '定期入出金を追加' : '定期入出金を編集',
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
         actions: [TextButton(onPressed: _save, child: const Text('保存'))],
       ),
       body: ListView(
@@ -2390,17 +2123,25 @@ class _RecurringTransactionEditScreenState
             items: _categories
                 .map((e) => DropdownMenuItem(value: e, child: Text(e.label)))
                 .toList(),
-            onChanged: (value) => setState(() => _category = value ?? _category),
+            onChanged: (value) =>
+                setState(() => _category = value ?? _category),
           ),
           const SizedBox(height: 12),
           SegmentedButton<RecurringFrequency>(
             segments: const [
-              ButtonSegment(value: RecurringFrequency.monthly, label: Text('毎月')),
-              ButtonSegment(value: RecurringFrequency.yearly, label: Text('毎年')),
+              ButtonSegment(
+                value: RecurringFrequency.monthly,
+                label: Text('毎月'),
+              ),
+              ButtonSegment(
+                value: RecurringFrequency.yearly,
+                label: Text('毎年'),
+              ),
             ],
             selected: {_frequency},
             showSelectedIcon: false,
-            onSelectionChanged: (values) => setState(() => _frequency = values.first),
+            onSelectionChanged: (values) =>
+                setState(() => _frequency = values.first),
           ),
           const SizedBox(height: 12),
           if (_frequency == RecurringFrequency.yearly) ...[
@@ -2408,9 +2149,13 @@ class _RecurringTransactionEditScreenState
               value: _monthOfYear,
               decoration: _decoration('実行月'),
               items: List.generate(12, (i) => i + 1)
-                  .map((month) => DropdownMenuItem(value: month, child: Text('$month月')))
+                  .map(
+                    (month) =>
+                        DropdownMenuItem(value: month, child: Text('$month月')),
+                  )
                   .toList(),
-              onChanged: (value) => setState(() => _monthOfYear = value ?? _monthOfYear),
+              onChanged: (value) =>
+                  setState(() => _monthOfYear = value ?? _monthOfYear),
             ),
             const SizedBox(height: 12),
           ],
@@ -2418,9 +2163,12 @@ class _RecurringTransactionEditScreenState
             value: _dayOfMonth,
             decoration: _decoration('実行日'),
             items: List.generate(31, (i) => i + 1)
-                .map((day) => DropdownMenuItem(value: day, child: Text('$day日')))
+                .map(
+                  (day) => DropdownMenuItem(value: day, child: Text('$day日')),
+                )
                 .toList(),
-            onChanged: (value) => setState(() => _dayOfMonth = value ?? _dayOfMonth),
+            onChanged: (value) =>
+                setState(() => _dayOfMonth = value ?? _dayOfMonth),
           ),
           const SizedBox(height: 12),
           ListTile(
@@ -2429,7 +2177,10 @@ class _RecurringTransactionEditScreenState
               borderRadius: BorderRadius.circular(16),
               side: const BorderSide(color: _border),
             ),
-            leading: const Icon(Icons.play_circle_outline_rounded, color: _purple),
+            leading: const Icon(
+              Icons.play_circle_outline_rounded,
+              color: _purple,
+            ),
             title: const Text('開始日'),
             subtitle: Text(_date(_startDate)),
             trailing: const Icon(Icons.chevron_right_rounded),
@@ -2460,19 +2211,26 @@ class _RecurringTransactionEditScreenState
           ),
           const SizedBox(height: 12),
           if (widget.oshis.isNotEmpty) ...[
-            const Text('関連する推し（任意）', style: TextStyle(fontWeight: FontWeight.w900)),
+            const Text(
+              '関連する推し（任意）',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
             const SizedBox(height: 6),
             Wrap(
               spacing: 8,
               runSpacing: 4,
               children: widget.oshis
-                  .map((oshi) => FilterChip(
-                        selected: _members.contains(oshi.name),
-                        label: Text(oshi.name),
-                        onSelected: (selected) => setState(() {
-                          selected ? _members.add(oshi.name) : _members.remove(oshi.name);
-                        }),
-                      ))
+                  .map(
+                    (oshi) => FilterChip(
+                      selected: _members.contains(oshi.name),
+                      label: Text(oshi.name),
+                      onSelected: (selected) => setState(() {
+                        selected
+                            ? _members.add(oshi.name)
+                            : _members.remove(oshi.name);
+                      }),
+                    ),
+                  )
                   .toList(),
             ),
             const SizedBox(height: 12),
@@ -2584,8 +2342,11 @@ class _OshiWalletScreenState extends State<OshiWalletScreen> {
         .fold<int>(0, (sum, e) => sum + e.amount);
     final balance = income - expense;
     final categories = <TransactionCategory, int>{};
-    for (final value in monthValues.where((e) => e.type == TransactionType.expense)) {
-      categories[value.category] = (categories[value.category] ?? 0) + value.amount;
+    for (final value in monthValues.where(
+      (e) => e.type == TransactionType.expense,
+    )) {
+      categories[value.category] =
+          (categories[value.category] ?? 0) + value.amount;
     }
     final sortedCategories = categories.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -2596,12 +2357,17 @@ class _OshiWalletScreenState extends State<OshiWalletScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.account_balance_wallet_rounded,
-                  color: _purple, size: 28),
+              const Icon(
+                Icons.account_balance_wallet_rounded,
+                color: _purple,
+                size: 28,
+              ),
               const SizedBox(width: 8),
               const Expanded(
-                child: Text('推し活家計簿',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+                child: Text(
+                  '推し活家計簿',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+                ),
               ),
               TextButton.icon(
                 onPressed: _openRecurring,
@@ -2621,10 +2387,21 @@ class _OshiWalletScreenState extends State<OshiWalletScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              IconButton(onPressed: () => _shiftMonth(-1), icon: const Icon(Icons.chevron_left)),
-              Text('${_month.year}年 ${_month.month}月',
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
-              IconButton(onPressed: () => _shiftMonth(1), icon: const Icon(Icons.chevron_right)),
+              IconButton(
+                onPressed: () => _shiftMonth(-1),
+                icon: const Icon(Icons.chevron_left),
+              ),
+              Text(
+                '${_month.year}年 ${_month.month}月',
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              IconButton(
+                onPressed: () => _shiftMonth(1),
+                icon: const Icon(Icons.chevron_right),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -2654,8 +2431,12 @@ class _OshiWalletScreenState extends State<OshiWalletScreen> {
                         child: Row(
                           children: [
                             Expanded(child: Text(entry.key.label)),
-                            Text(_money(entry.value),
-                                style: const TextStyle(fontWeight: FontWeight.w900)),
+                            Text(
+                              _money(entry.value),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -2683,12 +2464,15 @@ class _OshiWalletScreenState extends State<OshiWalletScreen> {
                   side: const BorderSide(color: _border),
                 ),
                 child: ListTile(
-                  title: Text(value.category.label,
-                      style: const TextStyle(fontWeight: FontWeight.w900)),
+                  title: Text(
+                    value.category.label,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
                   subtitle: Text(
                     [
                       _date(value.date),
-                      if (_eventName(value.eventId).isNotEmpty) _eventName(value.eventId),
+                      if (_eventName(value.eventId).isNotEmpty)
+                        _eventName(value.eventId),
                       if (value.memo.trim().isNotEmpty) value.memo,
                     ].join('・'),
                     maxLines: 2,
@@ -2729,15 +2513,23 @@ class _SummaryStrip extends StatelessWidget {
               (entry) => Expanded(
                 child: Column(
                   children: [
-                    Text(entry.$1,
-                        style: const TextStyle(
-                            fontSize: 11, color: Color(0xFF716B78))),
+                    Text(
+                      entry.$1,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF716B78),
+                      ),
+                    ),
                     const SizedBox(height: 3),
                     FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: Text(entry.$2,
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w900)),
+                      child: Text(
+                        entry.$2,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -2762,8 +2554,10 @@ class _Pill extends StatelessWidget {
         color: _lightPurple,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(text,
-          style: const TextStyle(color: _purple, fontWeight: FontWeight.w800)),
+      child: Text(
+        text,
+        style: const TextStyle(color: _purple, fontWeight: FontWeight.w800),
+      ),
     );
   }
 }

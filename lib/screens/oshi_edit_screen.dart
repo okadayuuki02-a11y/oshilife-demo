@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/oshi.dart';
+import '../widgets/oshi_profile_fields.dart';
 import '../widgets/group_suggestion_field.dart';
 import '../widgets/member_color_picker.dart';
 import '../widgets/photo_crop_screen.dart';
@@ -32,6 +33,9 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _groupController;
   late final TextEditingController _favoriteSongController;
+  final _profileFields = {
+    for (final key in profileLabels.keys) key: TextEditingController(),
+  };
 
   late bool _isPrimary;
   late DateTime? _oshiStartDate;
@@ -52,6 +56,24 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
     _nameController = TextEditingController(text: oshi.name);
     _groupController = TextEditingController(text: oshi.groupName);
     _favoriteSongController = TextEditingController(text: oshi.favoriteSong);
+    final values = <String, String>{
+      'furigana': oshi.furigana,
+      'nickname': oshi.nickname,
+      'birthday': oshi.birthday?.toIso8601String().substring(0, 10) ?? '',
+      'hometown': oshi.hometown,
+      'height': oshi.height,
+      'hobby': oshi.hobby,
+      'skill': oshi.skill,
+      'likes': oshi.likes,
+      'officialUrl': oshi.officialUrl,
+      'profile': oshi.profile,
+      'personalNickname': oshi.personalNickname,
+      'oshiReason': oshi.oshiReason,
+      'personalMemo': oshi.personalMemo,
+    };
+    for (final entry in values.entries) {
+      _profileFields[entry.key]!.text = entry.value;
+    }
 
     _isPrimary = oshi.isPrimary;
     _oshiStartDate = oshi.oshiStartDate;
@@ -78,6 +100,9 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
     _nameController.dispose();
     _groupController.dispose();
     _favoriteSongController.dispose();
+    for (final value in _profileFields.values) {
+      value.dispose();
+    }
     super.dispose();
   }
 
@@ -162,9 +187,7 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
   void _deleteHistoryPhoto(String encoded) {
     if (encoded == _currentPhoto) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('使用中の画像は「現在の写真を外す」から変更できます'),
-        ),
+        const SnackBar(content: Text('使用中の画像は「現在の写真を外す」から変更できます')),
       );
       return;
     }
@@ -213,9 +236,8 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
     final song = _favoriteSongController.text.trim();
 
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('推しの名前を入力してください')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('推しの名前を入力してください')));
       return;
     }
 
@@ -225,6 +247,19 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
     oshi.oshiStartDate = _oshiStartDate;
     oshi.favoriteSong = song.isEmpty ? 'まだ分からない' : song;
     oshi.memberColorHex = _memberColorHex;
+    oshi.furigana = _profileFields['furigana']!.text.trim();
+    oshi.nickname = _profileFields['nickname']!.text.trim();
+    oshi.birthday = DateTime.tryParse(_profileFields['birthday']!.text.trim());
+    oshi.hometown = _profileFields['hometown']!.text.trim();
+    oshi.height = _profileFields['height']!.text.trim();
+    oshi.hobby = _profileFields['hobby']!.text.trim();
+    oshi.skill = _profileFields['skill']!.text.trim();
+    oshi.likes = _profileFields['likes']!.text.trim();
+    oshi.officialUrl = _profileFields['officialUrl']!.text.trim();
+    oshi.profile = _profileFields['profile']!.text.trim();
+    oshi.personalNickname = _profileFields['personalNickname']!.text.trim();
+    oshi.oshiReason = _profileFields['oshiReason']!.text.trim();
+    oshi.personalMemo = _profileFields['personalMemo']!.text.trim();
 
     if (_isGraduated) {
       oshi.graduate(date: _graduatedAt);
@@ -353,7 +388,10 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
                 borderRadius: BorderRadius.circular(18),
                 onTap: _pickOshiStartDate,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 15,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(18),
@@ -380,7 +418,10 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
                         ),
                       ),
                       const SizedBox(width: 6),
-                      const Icon(Icons.chevron_right_rounded, color: Colors.black38),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: Colors.black38,
+                      ),
                     ],
                   ),
                 ),
@@ -408,6 +449,8 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 18),
+              OshiProfileFields(controllers: _profileFields),
               const SizedBox(height: 28),
             ],
           ),
@@ -436,11 +479,7 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
                 backgroundColor: lightPurple,
                 backgroundImage: currentImage,
                 child: currentImage == null
-                    ? const Icon(
-                        Icons.person_rounded,
-                        size: 58,
-                        color: purple,
-                      )
+                    ? const Icon(Icons.person_rounded, size: 58, color: purple)
                     : null,
               ),
               Positioned(
@@ -475,9 +514,7 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.add_photo_alternate_outlined),
-            label: Text(
-              currentImage == null ? '推しの写真を追加' : '新しい写真を選ぶ',
-            ),
+            label: Text(currentImage == null ? '推しの写真を追加' : '新しい写真を選ぶ'),
           ),
           if (_currentPhoto != null)
             TextButton(
@@ -518,7 +555,9 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: isCurrent ? purple : const Color(0xFFE6DCF8),
+                              color: isCurrent
+                                  ? purple
+                                  : const Color(0xFFE6DCF8),
                               width: isCurrent ? 3 : 1,
                             ),
                           ),
@@ -526,7 +565,10 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
                             backgroundColor: lightPurple,
                             backgroundImage: image,
                             child: image == null
-                                ? const Icon(Icons.person_rounded, color: purple)
+                                ? const Icon(
+                                    Icons.person_rounded,
+                                    color: purple,
+                                  )
                                 : null,
                           ),
                         ),

@@ -67,10 +67,7 @@ class ActivityStorage {
     final values = await loadChekiPurchases();
     purchase.updatedAt = DateTime.now();
     _upsert(values, purchase, (value) => value.id);
-    await _saveList(
-      _chekiPurchasesKey,
-      values.map((e) => e.toJson()).toList(),
-    );
+    await _saveList(_chekiPurchasesKey, values.map((e) => e.toJson()).toList());
     await _syncChekiPurchaseTransaction(purchase);
   }
 
@@ -101,6 +98,20 @@ class ActivityStorage {
     final values = await loadChekis();
     cheki.updatedAt = DateTime.now();
     _upsert(values, cheki, (value) => value.id);
+    await _saveList(_chekisKey, values.map((e) => e.toJson()).toList());
+  }
+
+  static Future<void> saveChekiBatch(List<ChekiRecord> records) async {
+    final values = await loadChekis();
+    for (final record in records) {
+      _upsert(values, record, (value) => value.id);
+    }
+    await _saveList(_chekisKey, values.map((e) => e.toJson()).toList());
+  }
+
+  static Future<void> deleteChekiBatch(Set<String> ids) async {
+    final values = await loadChekis();
+    values.removeWhere((value) => ids.contains(value.id));
     await _saveList(_chekisKey, values.map((e) => e.toJson()).toList());
   }
 
@@ -148,21 +159,14 @@ class ActivityStorage {
     final values = await loadTransactions();
     transaction.updatedAt = DateTime.now();
     _upsert(values, transaction, (value) => value.id);
-    await _saveList(
-      _transactionsKey,
-      values.map((e) => e.toJson()).toList(),
-    );
+    await _saveList(_transactionsKey, values.map((e) => e.toJson()).toList());
   }
 
   static Future<void> deleteTransaction(String transactionId) async {
     final values = await loadTransactions();
     values.removeWhere((value) => value.id == transactionId);
-    await _saveList(
-      _transactionsKey,
-      values.map((e) => e.toJson()).toList(),
-    );
+    await _saveList(_transactionsKey, values.map((e) => e.toJson()).toList());
   }
-
 
   static Future<void> saveRecurringTransaction(
     RecurringTransaction recurring,
@@ -186,7 +190,9 @@ class ActivityStorage {
     );
   }
 
-  static Future<void> materializeRecurringTransactions({DateTime? through}) async {
+  static Future<void> materializeRecurringTransactions({
+    DateTime? through,
+  }) async {
     final now = through ?? DateTime.now();
     final recurringValues = await loadRecurringTransactions();
     if (recurringValues.isEmpty) return;
@@ -248,12 +254,12 @@ class ActivityStorage {
             recurring.endDate!.month,
             recurring.endDate!.day,
           ).isBefore(DateTime(through.year, through.month, through.day))
-            ? DateTime(
-                recurring.endDate!.year,
-                recurring.endDate!.month,
-                recurring.endDate!.day,
-              )
-            : DateTime(through.year, through.month, through.day);
+        ? DateTime(
+            recurring.endDate!.year,
+            recurring.endDate!.month,
+            recurring.endDate!.day,
+          )
+        : DateTime(through.year, through.month, through.day);
 
     if (end.isBefore(start)) return;
 
@@ -288,8 +294,8 @@ class ActivityStorage {
     final day = requestedDay < 1
         ? 1
         : requestedDay > lastDay
-            ? lastDay
-            : requestedDay;
+        ? lastDay
+        : requestedDay;
     return DateTime(year, month, day);
   }
 
@@ -300,10 +306,7 @@ class ActivityStorage {
 
     final sources = await loadChekiSources();
     sources.removeWhere((value) => value.eventId == eventId);
-    await _saveList(
-      _chekiSourcesKey,
-      sources.map((e) => e.toJson()).toList(),
-    );
+    await _saveList(_chekiSourcesKey, sources.map((e) => e.toJson()).toList());
 
     final purchases = await loadChekiPurchases();
     purchases.removeWhere((value) => value.eventId == eventId);
@@ -356,8 +359,9 @@ class ActivityStorage {
             : 'チケット ${ticket.serialNumber.trim()}',
         sourceType: 'ticket',
         sourceId: ticket.id,
-        createdAt:
-            expenseIndex >= 0 ? values[expenseIndex].createdAt : DateTime.now(),
+        createdAt: expenseIndex >= 0
+            ? values[expenseIndex].createdAt
+            : DateTime.now(),
       );
       if (expenseIndex >= 0) {
         values[expenseIndex] = expense;
@@ -400,10 +404,7 @@ class ActivityStorage {
       if (idx >= 0) values.removeAt(idx);
     }
 
-    await _saveList(
-      _transactionsKey,
-      values.map((e) => e.toJson()).toList(),
-    );
+    await _saveList(_transactionsKey, values.map((e) => e.toJson()).toList());
   }
 
   static Future<void> _syncChekiPurchaseTransaction(
@@ -437,10 +438,7 @@ class ActivityStorage {
       }
     }
 
-    await _saveList(
-      _transactionsKey,
-      values.map((e) => e.toJson()).toList(),
-    );
+    await _saveList(_transactionsKey, values.map((e) => e.toJson()).toList());
   }
 
   static Future<List<T>> _loadList<T>(
@@ -467,7 +465,8 @@ class ActivityStorage {
     List<Map<String, dynamic>> values,
   ) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(key, jsonEncode(values));
+    final saved = await prefs.setString(key, jsonEncode(values));
+    if (!saved) throw StateError('ローカル保存に失敗しました: $key');
   }
 
   static void _upsert<T>(

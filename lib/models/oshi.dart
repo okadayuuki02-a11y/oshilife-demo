@@ -3,6 +3,19 @@ class Oshi {
 
   String name;
   String groupName;
+  String furigana;
+  String nickname;
+  DateTime? birthday;
+  String hometown;
+  String height;
+  String hobby;
+  String skill;
+  String likes;
+  String officialUrl;
+  String profile;
+  String personalNickname;
+  String oshiReason;
+  String personalMemo;
   bool isPrimary;
   DateTime? oshiStartDate;
   String favoriteSong;
@@ -26,6 +39,19 @@ class Oshi {
     required this.id,
     required this.name,
     required this.groupName,
+    this.furigana = '',
+    this.nickname = '',
+    this.birthday,
+    this.hometown = '',
+    this.height = '',
+    this.hobby = '',
+    this.skill = '',
+    this.likes = '',
+    this.officialUrl = '',
+    this.profile = '',
+    this.personalNickname = '',
+    this.oshiReason = '',
+    this.personalMemo = '',
     this.isPrimary = false,
     this.oshiStartDate,
     this.favoriteSong = 'まだ分からない',
@@ -39,8 +65,8 @@ class Oshi {
     this.managementPausedAt,
     this.frozenOshiDays,
     this.frozenRegisteredDays,
-  })  : registeredAt = registeredAt ?? DateTime.now(),
-        profilePhotoHistory = profilePhotoHistory ?? <String>[];
+  }) : registeredAt = registeredAt ?? DateTime.now(),
+       profilePhotoHistory = profilePhotoHistory ?? <String>[];
 
   bool get isActive => !isGraduated;
 
@@ -67,7 +93,11 @@ class Oshi {
     }
 
     final today = DateTime.now();
-    final start = DateTime(registeredAt.year, registeredAt.month, registeredAt.day);
+    final start = DateTime(
+      registeredAt.year,
+      registeredAt.month,
+      registeredAt.day,
+    );
     final now = DateTime(today.year, today.month, today.day);
     return now.difference(start).inDays + 1;
   }
@@ -106,6 +136,19 @@ class Oshi {
       'id': id,
       'name': name,
       'groupName': groupName,
+      'furigana': furigana,
+      'nickname': nickname,
+      'birthday': birthday?.toIso8601String(),
+      'hometown': hometown,
+      'height': height,
+      'hobby': hobby,
+      'skill': skill,
+      'likes': likes,
+      'officialUrl': officialUrl,
+      'profile': profile,
+      'personalNickname': personalNickname,
+      'oshiReason': oshiReason,
+      'personalMemo': personalMemo,
       'isPrimary': isPrimary,
       'oshiStartDate': oshiStartDate?.toIso8601String(),
       'favoriteSong': favoriteSong,
@@ -129,13 +172,27 @@ class Oshi {
       id: json['id'] as String,
       name: json['name'] as String? ?? '',
       groupName: json['groupName'] as String? ?? '',
+      furigana: json['furigana'] as String? ?? '',
+      nickname: json['nickname'] as String? ?? '',
+      birthday: DateTime.tryParse(json['birthday'] as String? ?? ''),
+      hometown: json['hometown'] as String? ?? '',
+      height: json['height'] as String? ?? '',
+      hobby: json['hobby'] as String? ?? '',
+      skill: json['skill'] as String? ?? '',
+      likes: json['likes'] as String? ?? '',
+      officialUrl: json['officialUrl'] as String? ?? '',
+      profile: json['profile'] as String? ?? '',
+      personalNickname: json['personalNickname'] as String? ?? '',
+      oshiReason: json['oshiReason'] as String? ?? '',
+      personalMemo: json['personalMemo'] as String? ?? '',
       isPrimary: json['isPrimary'] as bool? ?? false,
       oshiStartDate: json['oshiStartDate'] == null
           ? null
           : DateTime.tryParse(json['oshiStartDate'] as String),
       favoriteSong: json['favoriteSong'] as String? ?? 'まだ分からない',
       memberColorHex: json['memberColorHex'] as String?,
-      registeredAt: DateTime.tryParse(json['registeredAt'] as String? ?? '') ??
+      registeredAt:
+          DateTime.tryParse(json['registeredAt'] as String? ?? '') ??
           DateTime.now(),
       isGraduated: json['isGraduated'] as bool? ?? false,
       graduatedAt: json['graduatedAt'] == null
