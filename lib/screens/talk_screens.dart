@@ -28,11 +28,13 @@ class TalkListScreen extends StatefulWidget {
     super.key,
     this.event,
     this.memberName,
+    this.participationSlotId,
     this.oshis = const [],
     this.onChanged,
   });
   final OshiEvent? event;
   final String? memberName;
+  final String? participationSlotId;
   final List<Oshi> oshis;
   final Future<void> Function()? onChanged;
 
@@ -72,7 +74,9 @@ class _TalkListScreenState extends State<TalkListScreen> {
                 (t) =>
                     (widget.event == null || t.eventId == widget.event!.id) &&
                     (widget.memberName == null ||
-                        t.participantNames.contains(widget.memberName)),
+                        t.participantNames.contains(widget.memberName)) &&
+                    (widget.participationSlotId == null ||
+                        t.participationSlotId == widget.participationSlotId),
               )
               .toList()
             ..sort((a, b) => b.talkedAt.compareTo(a.talkedAt));
@@ -105,6 +109,7 @@ class _TalkListScreenState extends State<TalkListScreen> {
           chekis: _chekis,
           initial: initial,
           preselectedMember: widget.memberName,
+          participationSlotId: widget.participationSlotId,
         ),
       ),
     );
@@ -292,6 +297,9 @@ class TalkEditScreen extends StatefulWidget {
     this.initial,
     this.preselectedChekiIds,
     this.preselectedMember,
+    this.preselectedSessionLabel,
+    this.preselectedTicketCount,
+    this.participationSlotId,
   });
   final OshiEvent? event;
   final List<Oshi> oshis;
@@ -299,6 +307,9 @@ class TalkEditScreen extends StatefulWidget {
   final TalkLog? initial;
   final List<String>? preselectedChekiIds;
   final String? preselectedMember;
+  final String? preselectedSessionLabel;
+  final int? preselectedTicketCount;
+  final String? participationSlotId;
   @override
   State<TalkEditScreen> createState() => _TalkEditScreenState();
 }
@@ -322,7 +333,9 @@ class _TalkEditScreenState extends State<TalkEditScreen> {
   void initState() {
     super.initState();
     final t = widget.initial;
-    _title = TextEditingController(text: t?.sessionLabel ?? '');
+    _title = TextEditingController(
+      text: t?.sessionLabel ?? widget.preselectedSessionLabel ?? '',
+    );
     _eventName = TextEditingController(
       text: t?.eventName ?? widget.event?.title ?? '',
     );
@@ -415,10 +428,12 @@ class _TalkEditScreenState extends State<TalkEditScreen> {
         id: widget.initial?.id,
         eventId: widget.event?.id ?? widget.initial?.eventId ?? '',
         eventName: _eventName.text.trim(),
+        participationSlotId:
+            widget.participationSlotId ?? widget.initial?.participationSlotId,
         participantNames: _members.toList(),
         talkedAt: _date,
         sessionLabel: _title.text.trim(),
-        ticketCount: widget.initial?.ticketCount,
+        ticketCount: widget.initial?.ticketCount ?? widget.preselectedTicketCount,
         chekiIds: _chekiIds.toList(),
         imagesBase64: _images,
         memo: _memo.text.trim(),

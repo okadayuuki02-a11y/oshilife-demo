@@ -6,6 +6,7 @@ class Oshi {
   String furigana;
   String nickname;
   DateTime? birthday;
+  String birthdayText;
   String hometown;
   String height;
   String hobby;
@@ -42,6 +43,7 @@ class Oshi {
     this.furigana = '',
     this.nickname = '',
     this.birthday,
+    this.birthdayText = '',
     this.hometown = '',
     this.height = '',
     this.hobby = '',
@@ -139,6 +141,7 @@ class Oshi {
       'furigana': furigana,
       'nickname': nickname,
       'birthday': birthday?.toIso8601String(),
+      'birthdayText': birthdayText,
       'hometown': hometown,
       'height': height,
       'hobby': hobby,
@@ -175,6 +178,7 @@ class Oshi {
       furigana: json['furigana'] as String? ?? '',
       nickname: json['nickname'] as String? ?? '',
       birthday: DateTime.tryParse(json['birthday'] as String? ?? ''),
+      birthdayText: _birthdayTextFromJson(json),
       hometown: json['hometown'] as String? ?? '',
       height: json['height'] as String? ?? '',
       hobby: json['hobby'] as String? ?? '',
@@ -210,4 +214,11 @@ class Oshi {
       frozenRegisteredDays: (json['frozenRegisteredDays'] as num?)?.toInt(),
     );
   }
+}
+
+String _birthdayTextFromJson(Map<String, dynamic> json) {
+  final saved = json['birthdayText'] as String?;
+  if (saved != null && saved.trim().isNotEmpty) return saved;
+  final legacy = json['birthday'] as String? ?? '';
+  return legacy.length >= 10 ? legacy.substring(0, 10) : legacy;
 }

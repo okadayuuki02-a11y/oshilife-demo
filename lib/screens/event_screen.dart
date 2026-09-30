@@ -314,11 +314,20 @@ class EventScreen extends StatelessWidget {
                 Icons.location_on_outlined,
                 event.venue.isEmpty ? '会場未定' : event.venue,
               ),
-              if (event.openTime != null || event.startTime != null) ...[
+              if (event.type != OshiEventType.specialEvent &&
+                  (event.openTime != null || event.startTime != null)) ...[
                 const SizedBox(height: 6),
                 _iconLine(
                   Icons.schedule_rounded,
                   'OPEN ${_timeText(event.openTime)} / START ${_timeText(event.startTime)}',
+                ),
+              ],
+              if (event.type == OshiEventType.specialEvent &&
+                  event.participationSlots.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                _iconLine(
+                  Icons.schedule_rounded,
+                  '参加枠 ${event.participationSlots.length}件',
                 ),
               ],
               if (event.primaryGroup != null && event.primaryGroup!.trim().isNotEmpty) ...[
@@ -351,7 +360,19 @@ class EventScreen extends StatelessWidget {
   }
 
   DateTime _eventDateTime(OshiEvent event) {
-    final time = event.openTime ?? event.startTime;
+    TimeOfDay? time;
+    if (event.type == OshiEventType.specialEvent &&
+        event.participationSlots.isNotEmpty) {
+      final slots = [...event.participationSlots]
+        ..sort((a, b) {
+          final am = (a.startTime?.hour ?? 99) * 60 + (a.startTime?.minute ?? 99);
+          final bm = (b.startTime?.hour ?? 99) * 60 + (b.startTime?.minute ?? 99);
+          return am.compareTo(bm);
+        });
+      time = slots.first.startTime;
+    } else {
+      time = event.openTime ?? event.startTime;
+    }
     return DateTime(
       event.date.year,
       event.date.month,

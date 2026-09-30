@@ -9,6 +9,7 @@ import '../widgets/oshi_profile_fields.dart';
 import '../widgets/group_suggestion_field.dart';
 import '../widgets/member_color_picker.dart';
 import '../widgets/photo_crop_screen.dart';
+import '../widgets/profile_auto_fill_button.dart';
 
 /// OCRなど外部入力の結果を、既存の推し登録フォームへ流し込むための土台。
 class OshiAddPrefill {
@@ -176,6 +177,7 @@ class _OshiAddScreenState extends State<OshiAddScreen> {
       furigana: _profileFields['furigana']!.text.trim(),
       nickname: _profileFields['nickname']!.text.trim(),
       birthday: DateTime.tryParse(_profileFields['birthday']!.text.trim()),
+      birthdayText: _profileFields['birthday']!.text.trim(),
       hometown: _profileFields['hometown']!.text.trim(),
       height: _profileFields['height']!.text.trim(),
       hobby: _profileFields['hobby']!.text.trim(),
@@ -329,11 +331,25 @@ class _OshiAddScreenState extends State<OshiAddScreen> {
                   ),
                   const SizedBox(height: 14),
                   GroupSuggestionField(
+                    key: ValueKey(_groupName),
                     initialValue: _groupName,
                     suggestions: widget.groupSuggestions,
                     requiredField: true,
                     onChanged: (value) {
                       _groupName = value;
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  ProfileAutoFillButton(
+                    nameController: _nameController,
+                    profileControllers: _profileFields,
+                    currentGroupName: _groupName,
+                    currentMemberColorHex: _memberColorHex,
+                    onGroupDetected: (value) {
+                      setState(() => _groupName = value);
+                    },
+                    onMemberColorDetected: (value) {
+                      setState(() => _memberColorHex = value);
                     },
                   ),
                   const SizedBox(height: 18),

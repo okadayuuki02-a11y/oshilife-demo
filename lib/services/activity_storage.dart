@@ -324,7 +324,14 @@ class ActivityStorage {
     await _saveList(_talksKey, talks.map((e) => e.toJson()).toList());
 
     final transactions = await loadTransactions();
-    transactions.removeWhere((value) => value.eventId == eventId);
+    for (final transaction in transactions) {
+      transaction.eventAllocations.removeWhere(
+        (allocation) => allocation.eventId == eventId,
+      );
+      if (transaction.eventId == eventId) {
+        transaction.eventId = null;
+      }
+    }
     await _saveList(
       _transactionsKey,
       transactions.map((e) => e.toJson()).toList(),

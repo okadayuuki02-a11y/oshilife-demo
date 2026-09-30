@@ -254,7 +254,19 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   DateTime _eventDateTime(OshiEvent event) {
-    final time = event.openTime ?? event.startTime;
+    TimeOfDay? time;
+    if (event.type == OshiEventType.specialEvent &&
+        event.participationSlots.isNotEmpty) {
+      final slots = [...event.participationSlots]
+        ..sort((a, b) {
+          final am = (a.startTime?.hour ?? 99) * 60 + (a.startTime?.minute ?? 99);
+          final bm = (b.startTime?.hour ?? 99) * 60 + (b.startTime?.minute ?? 99);
+          return am.compareTo(bm);
+        });
+      time = slots.first.startTime;
+    } else {
+      time = event.openTime ?? event.startTime;
+    }
     return DateTime(
       event.date.year,
       event.date.month,
@@ -268,6 +280,17 @@ class _MainScreenState extends State<MainScreen> {
     final weekday = const ['月', '火', '水', '木', '金', '土', '日'];
     final day = weekday[event.date.weekday - 1];
     final date = '${event.date.month}/${event.date.day}（$day）';
+    if (event.type == OshiEventType.specialEvent) {
+      final slots = [...event.participationSlots]
+        ..sort((a, b) {
+          final am = (a.startTime?.hour ?? 99) * 60 + (a.startTime?.minute ?? 99);
+          final bm = (b.startTime?.hour ?? 99) * 60 + (b.startTime?.minute ?? 99);
+          return am.compareTo(bm);
+        });
+      if (slots.isEmpty || slots.first.startTime == null) return date;
+      return '$date  次 ${_timeLabel(slots.first.startTime)}';
+    }
+
     final open = _timeLabel(event.openTime);
     final start = _timeLabel(event.startTime);
 
@@ -488,17 +511,18 @@ class _MainScreenState extends State<MainScreen> {
               ),
 
               NavigationDestination(
+                icon: Icon(Icons.forum_outlined),
+                selectedIcon: Icon(Icons.forum_rounded, color: purple),
+                label: 'トーク',
+              ),
+
+              NavigationDestination(
                 icon: Icon(Icons.account_balance_wallet_outlined),
                 selectedIcon: Icon(
                   Icons.account_balance_wallet_rounded,
                   color: purple,
                 ),
                 label: '家計簿',
-              ),
-
-              NavigationDestination(
-                icon: Icon(Icons.more_horiz_rounded),
-                label: 'トーク',
               ),
             ],
           ),
@@ -586,18 +610,200 @@ class _MainScreenState extends State<MainScreen> {
         );
 
       case 3:
+        return TalkListScreen(oshis: _oshis, onChanged: _refreshActivityData);
+
+      case 4:
         return OshiWalletScreen(
           oshis: _oshis,
           events: _events,
           onChanged: _refreshActivityData,
         );
 
-      case 4:
-        return TalkListScreen(oshis: _oshis, onChanged: _refreshActivityData);
-
       default:
         return _buildHome();
     }
+  }
+
+  Future<void> _showMainMenu() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: background,
+      builder: (sheetContext) {
+        Widget menuTile({
+          required IconData icon,
+          required String title,
+          String? subtitle,
+          VoidCallback? onTap,
+        }) {
+          return ListTile(
+            leading: Icon(icon, color: purple),
+            title: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+            subtitle: subtitle == null ? null : Text(subtitle),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: onTap,
+          );
+        }
+
+        return SafeArea(
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.78,
+            minChildSize: 0.55,
+            maxChildSize: 0.94,
+            expand: false,
+            builder: (context, controller) => ListView(
+              controller: controller,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD9D2E5),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'メニュー',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  '管理',
+                  style: TextStyle(
+                    color: Color(0xFF716B78),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                menuTile(
+                  icon: Icons.favorite_outline_rounded,
+                  title: '推し管理',
+                  subtitle: '推し・過去の推し・グループ',
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _switchTab(1);
+                  },
+                ),
+                menuTile(
+                  icon: Icons.autorenew_rounded,
+                  title: '定期入出金',
+                  subtitle: '給料・FC・サブスクなど',
+                  onTap: () async {
+                    Navigator.pop(sheetContext);
+                    await _contentNavigatorKey.currentState?.push(
+                      MaterialPageRoute(
+                        settings: const RouteSettings(name: 'recurring_transactions'),
+                        builder: (_) => RecurringTransactionsScreen(
+                          oshis: _oshis,
+                          onChanged: _refreshActivityData,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(),
+                const Text(
+                  'アプリ・データ',
+                  style: TextStyle(
+                    color: Color(0xFF716B78),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                menuTile(
+                  icon: Icons.cloud_done_outlined,
+                  title: 'オフライン・同期状況',
+                  subtitle: '端末保存を優先して動作',
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _showInfoDialog(
+                      'オフライン・同期状況',
+                      'イベント・参加枠・トーク・支出はまず端末に保存します。現在のデモは端末保存版です。クラウド同期は正式版で通信復帰後に自動同期する設計です。',
+                    );
+                  },
+                ),
+                menuTile(
+                  icon: Icons.workspace_premium_outlined,
+                  title: 'Premium / プラン管理',
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _showInfoDialog('Premium / プラン管理', 'プラン管理画面は今後接続します。');
+                  },
+                ),
+                menuTile(
+                  icon: Icons.backup_outlined,
+                  title: 'バックアップ・データ出力',
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _showInfoDialog(
+                      'バックアップ・データ出力',
+                      'バックアップ・引き継ぎ・データ出力は正式版向けに実装予定です。',
+                    );
+                  },
+                ),
+                const Divider(),
+                const Text(
+                  'その他',
+                  style: TextStyle(
+                    color: Color(0xFF716B78),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                menuTile(
+                  icon: Icons.help_outline_rounded,
+                  title: 'OshiLifeの使い方',
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _showInfoDialog('OshiLifeの使い方', '使い方ガイドは今後追加します。');
+                  },
+                ),
+                menuTile(
+                  icon: Icons.bug_report_outlined,
+                  title: 'ご意見・不具合報告',
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _showInfoDialog('ご意見・不具合報告', 'フィードバック送信先は正式版で接続します。');
+                  },
+                ),
+                menuTile(
+                  icon: Icons.info_outline_rounded,
+                  title: 'アプリ情報',
+                  subtitle: 'OshiLife update12 revised',
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _showInfoDialog(
+                      'アプリ情報',
+                      'OshiLife update12 revised\\nイベント現場で通信を気にせず使える設計へ移行中です。',
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showInfoDialog(String title, String message) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('閉じる'),
+          ),
+        ],
+      ),
+    );
   }
 
   // =========================================================
@@ -630,7 +836,7 @@ class _MainScreenState extends State<MainScreen> {
                     Row(
                       children: [
                         IconButton(
-                          onPressed: () {},
+                          onPressed: _showMainMenu,
                           visualDensity: VisualDensity.compact,
                           icon: const Icon(Icons.menu_rounded),
                         ),
@@ -853,7 +1059,7 @@ class _MainScreenState extends State<MainScreen> {
                     InkWell(
                       borderRadius: BorderRadius.circular(20),
                       onTap: () {
-                        _switchTab(3);
+                        _switchTab(4);
                       },
                       child: Container(
                         width: double.infinity,

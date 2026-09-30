@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/activity_models.dart';
 import '../models/oshi.dart';
@@ -74,7 +75,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           .where((e) => e.eventId == _event.id)
           .toList();
       _transactions = (result[4] as List<OshiTransaction>)
-          .where((e) => e.eventId == _event.id)
+          .where((e) => e.isLinkedToEvent(_event.id))
           .toList();
     });
   }
@@ -227,7 +228,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 const SizedBox(height: 14),
                 _sharedInfoCard(context),
                 const SizedBox(height: 14),
-                _myPlanCard(context),
+                if (_event.type == OshiEventType.specialEvent)
+                  _specialEventCard(context)
+                else
+                  _myPlanCard(context),
                 const SizedBox(height: 14),
                 _eventHubCard(),
                 const SizedBox(height: 14),
@@ -300,17 +304,55 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             Icons.location_on_outlined,
             _event.venue.isEmpty ? '会場未定' : _event.venue,
           ),
-          const SizedBox(height: 8),
-          _iconLine(
-            Icons.schedule_rounded,
-            'OPEN ${_timeText(_event.openTime)} / START ${_timeText(_event.startTime)}',
-          ),
+          if (_event.type != OshiEventType.specialEvent) ...[
+            const SizedBox(height: 8),
+            _iconLine(
+              Icons.schedule_rounded,
+              'OPEN ${_timeText(_event.openTime)} / START ${_timeText(_event.startTime)}',
+            ),
+          ],
         ],
       ),
     );
   }
 
   Widget _sharedInfoCard(BuildContext context) {
+    if (_event.type == OshiEventType.specialEvent) {
+      final activities = _event.specialActivities.isEmpty
+          ? '特典会'
+          : _event.specialActivities.map((e) => e.label).join(' / ');
+      return _sectionCard(
+        title: 'イベント情報',
+        icon: Icons.badge_outlined,
+        children: [
+          _detailRow('種類', activities),
+          _detailRow('日付', _dateText(_event.date)),
+          _detailRow('会場', _event.venue.isEmpty ? '未定' : _event.venue),
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: lightPurple,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.offline_bolt_rounded, color: purple, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'イベント・参加枠・トーク・券情報は端末に保存されるので、会場で通信が弱くても確認・更新できます。',
+                    style: TextStyle(fontSize: 12.5, height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
     return _sectionCard(
       title: 'みんな共通のイベント情報',
       icon: Icons.public_rounded,
@@ -339,7 +381,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           ),
           for (final entry in _event.mySchedule)
             _detailRow(
-              _timeText(entry.startTime),
+              _scheduleTime(entry),
               '${entry.title}（${entry.label}）',
             ),
         ],
@@ -382,6 +424,766 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ),
       ],
     );
+  }
+
+  List<EventParticipationSlot> _sortedParticipationSlots() {
+    final slots = [..._event.participationSlots];
+    slots.sort((a, b) {
+      final am = (a.startTime?.hour ?? 99) * 60 + (a.startTime?.minute ?? 99);
+      final bm = (b.startTime?.hour ?? 99) * 60 + (b.startTime?.minute ?? 99);
+      return am.compareTo(bm);
+    });
+    return slots;
+  }
+
+  List<EventParticipationSlot> _upcomingParticipationSlots() {
+    final slots = _sortedParticipationSlots()
+        .where(
+          (slot) =>
+              slot.status != ParticipationSlotStatus.attended &&
+              slot.status != ParticipationSlotStatus.cancelled,
+        )
+        .toList();
+
+    final now = DateTime.now();
+    final eventDay = DateTime(_event.date.year, _event.date.month, _event.date.day);
+    final today = DateTime(now.year, now.month, now.day);
+
+    if (eventDay.isAfter(today)) return slots;
+    if (eventDay.isBefore(today)) return slots;
+
+    return slots.where((slot) {
+      final boundary =
+          slot.receptionEndTime ?? slot.endTime ?? slot.startTime;
+      if (boundary == null) return true;
+      final point = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        boundary.hour,
+        boundary.minute,
+      );
+      return !point.isBefore(now);
+    }).toList();
+  }
+
+  String _slotDeadlineHint(EventParticipationSlot slot) {
+    final deadline = slot.receptionEndTime;
+    if (deadline == null) return '';
+
+    final now = DateTime.now();
+    final eventDay = DateTime(_event.date.year, _event.date.month, _event.date.day);
+    final today = DateTime(now.year, now.month, now.day);
+    if (eventDay != today) return '受付終了 ${_timeText(deadline)}';
+
+    final point = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      deadline.hour,
+      deadline.minute,
+    );
+    final minutes = point.difference(now).inMinutes;
+    if (minutes < 0) return '受付終了済み';
+    if (minutes == 0) return '受付終了まで1分未満';
+    if (minutes < 60) return '受付終了まであと$minutes分';
+    return '受付終了 ${_timeText(deadline)}';
+  }
+
+  Widget _specialEventCard(BuildContext context) {
+    final slots = _sortedParticipationSlots();
+    final upcoming = _upcomingParticipationSlots();
+
+    return _sectionCard(
+      title: '参加する部・枠',
+      icon: Icons.badge_outlined,
+      children: [
+        if (upcoming.isNotEmpty) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: lightPurple,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '次の予定',
+                  style: TextStyle(
+                    color: purple,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                for (final slot in upcoming.take(2)) ...[
+                  Text(
+                    [
+                      if (slot.startTime != null) _timeText(slot.startTime),
+                      if (slot.partLabel.isNotEmpty) slot.partLabel,
+                      if (slot.memberName.isNotEmpty) slot.memberName,
+                    ].join('  '),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    [
+                      slot.activityType.label,
+                      if (_slotDeadlineHint(slot).isNotEmpty)
+                        _slotDeadlineHint(slot),
+                      '所持 ${slot.owned}枚',
+                    ].join(' ・ '),
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: Color(0xFF716B78),
+                    ),
+                  ),
+                  if (slot != upcoming.take(2).last)
+                    const Divider(height: 18),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        if (slots.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFBFF),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFE8E0F7)),
+            ),
+            child: const Text(
+              '参加する部だけ追加すればOKです。当日券を取った時も、あとからすぐ追加・枚数変更できます。',
+              style: TextStyle(
+                fontSize: 12.5,
+                color: Color(0xFF716B78),
+                height: 1.45,
+              ),
+            ),
+          )
+        else
+          for (final slot in slots) ...[
+            _participationSlotCard(slot),
+            const SizedBox(height: 10),
+          ],
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: () => _editParticipationSlot(),
+            style: FilledButton.styleFrom(backgroundColor: purple),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('参加する部を追加'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _participationSlotCard(EventParticipationSlot slot) {
+    final relatedTalks = _talks
+        .where((talk) => talk.participationSlotId == slot.id)
+        .toList();
+    final isDone = slot.status == ParticipationSlotStatus.attended;
+    final remaining = slot.remainingCount;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBFF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDone ? const Color(0xFFCFC6D7) : const Color(0xFFDCCBFF),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      [
+                        if (slot.partLabel.isNotEmpty) slot.partLabel,
+                        if (slot.memberName.isNotEmpty) slot.memberName,
+                      ].join('  '),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      slot.activityType.label,
+                      style: const TextStyle(
+                        color: purple,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                decoration: BoxDecoration(
+                  color: isDone ? const Color(0xFFEDE8F1) : lightPurple,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  slot.status.label,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (slot.startTime != null)
+            _iconLine(
+              Icons.schedule_rounded,
+              slot.endTime == null
+                  ? _timeText(slot.startTime)
+                  : '${_timeText(slot.startTime)}〜${_timeText(slot.endTime)}',
+            ),
+          if (slot.receptionEndTime != null) ...[
+            const SizedBox(height: 6),
+            _iconLine(
+              Icons.timer_outlined,
+              _slotDeadlineHint(slot),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _slotCountPill('所持', '${slot.owned}枚'),
+              ),
+              const SizedBox(width: 7),
+              Expanded(
+                child: _slotCountPill('使用', '${slot.used}枚'),
+              ),
+              const SizedBox(width: 7),
+              Expanded(
+                child: _slotCountPill('残り', '$remaining枚'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              OutlinedButton(
+                onPressed: () => _changeOwnedCount(slot, 1),
+                child: const Text('＋1枚'),
+              ),
+              OutlinedButton(
+                onPressed: () => _changeOwnedCount(slot, 5),
+                child: const Text('＋5枚'),
+              ),
+              if (remaining > 0 && !isDone)
+                OutlinedButton(
+                  onPressed: () => _changeUsedCount(slot, 1),
+                  child: const Text('使用＋1'),
+                ),
+            ],
+          ),
+          if (slot.laneOrChannel.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            _iconLine(Icons.signpost_outlined, slot.laneOrChannel),
+          ],
+          if (slot.note.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              slot.note,
+              style: const TextStyle(
+                fontSize: 12.5,
+                color: Color(0xFF716B78),
+              ),
+            ),
+          ],
+          if (slot.imagesBase64.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 92,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: slot.imagesBase64.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  try {
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.memory(
+                        base64Decode(slot.imagesBase64[index]),
+                        width: 92,
+                        height: 92,
+                        fit: BoxFit.cover,
+                      ),
+                    );
+                  } catch (_) {
+                    return const SizedBox.shrink();
+                  }
+                },
+              ),
+            ),
+          ],
+          if (relatedTalks.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            TextButton.icon(
+              style: TextButton.styleFrom(padding: EdgeInsets.zero),
+              onPressed: () => _openTalksForSlot(slot),
+              icon: const Icon(Icons.forum_outlined, size: 17),
+              label: Text('この枠のトークログ ${relatedTalks.length}件を見る'),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.tonalIcon(
+                onPressed: () => _addTalkForSlot(slot),
+                icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+                label: const Text('トーク記録'),
+              ),
+              if (slot.activityType.supportsPhoto)
+                FilledButton.tonalIcon(
+                  onPressed: () => _addPhotosForSlot(slot),
+                  icon: const Icon(Icons.add_a_photo_outlined, size: 18),
+                  label: Text(slot.imagesBase64.isEmpty ? '写真追加' : '写真を追加'),
+                ),
+              if (!isDone)
+                OutlinedButton.icon(
+                  onPressed: () => _markSlotAttended(slot),
+                  icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                  label: const Text('参加済み'),
+                ),
+              TextButton.icon(
+                onPressed: () => _editParticipationSlot(initial: slot),
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('編集'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _slotCountPill(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE8E0F7)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10.5,
+              color: Color(0xFF716B78),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _changeOwnedCount(
+    EventParticipationSlot slot,
+    int delta,
+  ) async {
+    final next = slot.owned + delta;
+    await _replaceParticipationSlot(
+      slot.copyWith(
+        ownedCount: next < 0 ? 0 : next,
+        status: slot.status == ParticipationSlotStatus.attended
+            ? ParticipationSlotStatus.pending
+            : slot.status,
+      ),
+    );
+  }
+
+  Future<void> _changeUsedCount(
+    EventParticipationSlot slot,
+    int delta,
+  ) async {
+    final max = slot.owned;
+    var next = slot.used + delta;
+    if (next < 0) next = 0;
+    if (max > 0 && next > max) next = max;
+    await _replaceParticipationSlot(
+      slot.copyWith(
+        usedCount: next,
+        status: max > 0 && next >= max
+            ? ParticipationSlotStatus.attended
+            : ParticipationSlotStatus.pending,
+      ),
+    );
+  }
+
+  Future<void> _editParticipationSlot({
+    EventParticipationSlot? initial,
+  }) async {
+    final member = TextEditingController(text: initial?.memberName ?? '');
+    final part = TextEditingController(text: initial?.partLabel ?? '');
+    final owned = TextEditingController(
+      text: initial?.ownedCount?.toString() ?? '',
+    );
+    final lane = TextEditingController(text: initial?.laneOrChannel ?? '');
+    final note = TextEditingController(text: initial?.note ?? '');
+
+    var activity = initial?.activityType ??
+        (_event.specialActivities.isNotEmpty
+            ? _event.specialActivities.first
+            : SpecialActivityType.talk);
+    var status = initial?.status ?? ParticipationSlotStatus.pending;
+    var start = initial?.startTime;
+    var end = initial?.endTime;
+    var receptionEnd = initial?.receptionEndTime;
+
+    final result = await showModalBottomSheet<EventParticipationSlot>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: background,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, update) => SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              18,
+              16,
+              18,
+              18 + MediaQuery.of(ctx).viewInsets.bottom,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    initial == null ? '参加する部を追加' : '参加枠を編集',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    '当日必要な情報だけ入れればOK。申込枚数や当選枚数の入力は不要です。',
+                    style: TextStyle(
+                      color: Color(0xFF716B78),
+                      fontSize: 12.5,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: part,
+                    decoration: const InputDecoration(
+                      labelText: '部・枠（例：第2部）',
+                      prefixIcon: Icon(Icons.view_agenda_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: member,
+                    decoration: const InputDecoration(
+                      labelText: 'メンバー名',
+                      prefixIcon: Icon(Icons.person_outline_rounded),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<SpecialActivityType>(
+                    initialValue: activity,
+                    decoration: const InputDecoration(
+                      labelText: '内容',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: SpecialActivityType.values
+                        .map(
+                          (value) => DropdownMenuItem(
+                            value: value,
+                            child: Text(value.label),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) =>
+                        update(() => activity = value ?? activity),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _slotTimeButton(
+                          ctx,
+                          label: '開始',
+                          value: start,
+                          onChanged: (value) => update(() => start = value),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _slotTimeButton(
+                          ctx,
+                          label: '終了',
+                          value: end,
+                          onChanged: (value) => update(() => end = value),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _slotTimeButton(
+                    ctx,
+                    label: '受付終了',
+                    value: receptionEnd,
+                    onChanged: (value) => update(() => receptionEnd = value),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: owned,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: '所持枚数',
+                      suffixText: '枚',
+                      prefixIcon: Icon(Icons.confirmation_number_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<ParticipationSlotStatus>(
+                    initialValue: [
+                      ParticipationSlotStatus.pending,
+                      ParticipationSlotStatus.attended,
+                      ParticipationSlotStatus.transferred,
+                      ParticipationSlotStatus.cancelled,
+                    ].contains(status)
+                        ? status
+                        : ParticipationSlotStatus.pending,
+                    decoration: const InputDecoration(
+                      labelText: '状態',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      ParticipationSlotStatus.pending,
+                      ParticipationSlotStatus.attended,
+                      ParticipationSlotStatus.transferred,
+                      ParticipationSlotStatus.cancelled,
+                    ]
+                        .map(
+                          (value) => DropdownMenuItem(
+                            value: value,
+                            child: Text(value.label),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) =>
+                        update(() => status = value ?? status),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: lane,
+                    decoration: const InputDecoration(
+                      labelText: 'レーン・チャンネル（任意）',
+                      prefixIcon: Icon(Icons.signpost_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: note,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: 'メモ（任意）',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(backgroundColor: purple),
+                      onPressed: () {
+                        Navigator.pop(
+                          ctx,
+                          EventParticipationSlot(
+                            id: initial?.id,
+                            memberName: member.text.trim(),
+                            partLabel: part.text.trim(),
+                            activityType: activity,
+                            startTime: start,
+                            endTime: end,
+                            receptionEndTime: receptionEnd,
+                            ownedCount: int.tryParse(owned.text.trim()) ?? 0,
+                            usedCount: initial?.usedCount,
+                            status: status,
+                            laneOrChannel: lane.text.trim(),
+                            note: note.text.trim(),
+                            imagesBase64: initial?.imagesBase64,
+                          ),
+                        );
+                      },
+                      child: const Text('保存'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    member.dispose();
+    part.dispose();
+    owned.dispose();
+    lane.dispose();
+    note.dispose();
+
+    if (result == null || !mounted) return;
+
+    final slots = [..._event.participationSlots];
+    if (initial == null) {
+      slots.add(result);
+    } else {
+      final index = slots.indexWhere((item) => item.id == initial.id);
+      if (index >= 0) slots[index] = result;
+    }
+    final updated = _event.copyWith(participationSlots: slots);
+    final original = _event;
+    await widget.onUpdateEvent(original, updated);
+    if (!mounted) return;
+    setState(() => _event = updated);
+  }
+
+  Widget _slotTimeButton(
+    BuildContext context, {
+    required String label,
+    required TimeOfDay? value,
+    required ValueChanged<TimeOfDay?> onChanged,
+  }) {
+    return OutlinedButton.icon(
+      onPressed: () async {
+        final picked = await showTimePicker(
+          context: context,
+          initialTime: value ?? const TimeOfDay(hour: 12, minute: 0),
+        );
+        if (picked != null) onChanged(picked);
+      },
+      icon: const Icon(Icons.schedule_rounded, size: 18),
+      label: Text('$label ${_timeText(value)}'),
+    );
+  }
+
+  Future<void> _replaceParticipationSlot(EventParticipationSlot slot) async {
+    final slots = [..._event.participationSlots];
+    final index = slots.indexWhere((item) => item.id == slot.id);
+    if (index < 0) return;
+    slots[index] = slot;
+    final updated = _event.copyWith(participationSlots: slots);
+    final original = _event;
+    await widget.onUpdateEvent(original, updated);
+    if (!mounted) return;
+    setState(() => _event = updated);
+  }
+
+  Future<void> _addPhotosForSlot(EventParticipationSlot slot) async {
+    final files = await ImagePicker().pickMultiImage(
+      imageQuality: 70,
+      maxWidth: 1400,
+      maxHeight: 1800,
+    );
+    if (files.isEmpty) return;
+    final images = [...slot.imagesBase64];
+    for (final file in files) {
+      images.add(base64Encode(await file.readAsBytes()));
+    }
+    try {
+      await _replaceParticipationSlot(slot.copyWith(imagesBase64: images));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('写真を保存できませんでした。画像枚数や保存容量を確認してください。')),
+      );
+    }
+  }
+
+  Future<void> _markSlotAttended(EventParticipationSlot slot) async {
+    await _replaceParticipationSlot(
+      slot.copyWith(
+        status: ParticipationSlotStatus.attended,
+        usedCount: slot.usedCount ?? slot.ownedCount,
+      ),
+    );
+  }
+
+  Future<void> _openTalksForSlot(EventParticipationSlot slot) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        settings: const RouteSettings(name: 'slot_talk_list'),
+        builder: (_) => TalkListScreen(
+          event: _event,
+          memberName: slot.memberName.isEmpty ? null : slot.memberName,
+          participationSlotId: slot.id,
+          oshis: widget.oshis,
+          onChanged: _activityChanged,
+        ),
+      ),
+    );
+    await _reloadActivity();
+  }
+
+  Future<void> _addTalkForSlot(EventParticipationSlot slot) async {
+    final chekis = (await ActivityStorage.loadChekis())
+        .where((e) => e.eventId == _event.id)
+        .toList();
+    if (!mounted) return;
+
+    final ticketCount = slot.usedCount ?? slot.ownedCount;
+    final talk = await Navigator.of(context).push<TalkLog>(
+      MaterialPageRoute(
+        settings: const RouteSettings(name: 'slot_talk_add'),
+        builder: (_) => TalkEditScreen(
+          event: _event,
+          oshis: widget.oshis,
+          chekis: chekis,
+          preselectedMember: slot.memberName.isEmpty ? null : slot.memberName,
+          preselectedSessionLabel: [
+            if (slot.partLabel.isNotEmpty) slot.partLabel,
+            slot.activityType.label,
+          ].join(' '),
+          preselectedTicketCount: ticketCount,
+          participationSlotId: slot.id,
+        ),
+      ),
+    );
+    if (talk == null) return;
+    await ActivityStorage.saveTalk(talk);
+    await _activityChanged();
   }
 
   Widget _myPlanCard(BuildContext context) {
@@ -755,11 +1557,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   Widget _eventHubCard() {
     final expense = _transactions
         .where((e) => e.type == TransactionType.expense)
-        .fold<int>(0, (sum, e) => sum + e.amount);
+        .fold<int>(0, (sum, e) => sum + e.amountForEvent(_event.id));
     final refunds = _transactions
         .where((e) => e.type == TransactionType.refund)
-        .fold<int>(0, (sum, e) => sum + e.amount);
+        .fold<int>(0, (sum, e) => sum + e.amountForEvent(_event.id));
     final net = expense - refunds;
+    final slotPhotoCount = _event.participationSlots.fold<int>(
+      0,
+      (sum, slot) => sum + slot.imagesBase64.length,
+    );
+    final isSpecial = _event.type == OshiEventType.specialEvent;
 
     return _sectionCard(
       title: '今日の記録',
@@ -776,9 +1583,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(width: 8),
             _miniStat(
               Icons.camera_alt_outlined,
-              'チェキ',
-              '${_chekis.length}枚',
-              onTap: _openChekis,
+              isSpecial ? '写真' : 'チェキ',
+              isSpecial
+                  ? '${_chekis.length + slotPhotoCount}枚'
+                  : '${_chekis.length}枚',
+              onTap: isSpecial ? _showEventPhotos : _openChekis,
             ),
           ],
         ),
@@ -815,6 +1624,28 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 Expanded(
                   child: Text(
                     'フェスモード：全体タイテと自分の予定をこのイベント内でまとめて管理できます。',
+                    style: TextStyle(fontSize: 12.5, height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        if (isSpecial) ...[
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: lightPurple,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.badge_outlined, color: purple),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '特典会モード：部ごとの時間・受付終了・券・トーク・撮影写真を同じ参加枠にまとめます。',
                     style: TextStyle(fontSize: 12.5, height: 1.4),
                   ),
                 ),
@@ -907,6 +1738,107 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     await _reloadActivity();
   }
 
+  void _showEventPhotos() {
+    final slotPhotos = <({String label, String image})>[];
+    for (final slot in _event.participationSlots) {
+      final label = [
+        if (slot.partLabel.isNotEmpty) slot.partLabel,
+        if (slot.memberName.isNotEmpty) slot.memberName,
+        slot.activityType.label,
+      ].join(' ');
+      for (final image in slot.imagesBase64) {
+        slotPhotos.add((label: label, image: image));
+      }
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: background,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.72,
+        minChildSize: 0.45,
+        maxChildSize: 0.94,
+        expand: false,
+        builder: (ctx, controller) => ListView(
+          controller: controller,
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
+          children: [
+            Center(
+              child: Container(
+                width: 44,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD9D2E5),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'このイベントの写真',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              '撮影会の写真は参加した部・メンバーに紐づけて表示します。',
+              style: TextStyle(color: Color(0xFF716B78)),
+            ),
+            const SizedBox(height: 14),
+            if (slotPhotos.isEmpty && _chekis.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Text('まだ写真はありません。撮影会の参加枠から追加できます。'),
+              )
+            else ...[
+              for (final item in slotPhotos)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE8E0F7)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.label,
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.memory(
+                          base64Decode(item.image),
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (_chekis.isNotEmpty)
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _openChekis();
+                  },
+                  icon: const Icon(Icons.collections_outlined),
+                  label: Text('チェキ記録も見る（${_chekis.length}枚）'),
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _recordDrink() async {
     if (_transactions.any(
       (t) => t.sourceType == 'drink' && t.sourceId == _event.id,
@@ -968,9 +1900,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ),
         _actionTile(
           Icons.camera_alt_rounded,
-          'チェキ',
-          _chekis.isEmpty ? '写真あり／画像なしのどちらでも記録' : '${_chekis.length}枚記録中',
-          _openChekis,
+          _event.type == OshiEventType.specialEvent ? '写真' : 'チェキ',
+          _event.type == OshiEventType.specialEvent
+              ? '写メ会・撮影会は参加枠から写真を紐付け'
+              : (_chekis.isEmpty ? '写真あり／画像なしのどちらでも記録' : '${_chekis.length}枚記録中'),
+          _event.type == OshiEventType.specialEvent ? _showEventPhotos : _openChekis,
         ),
         _actionTile(
           Icons.chat_bubble_rounded,

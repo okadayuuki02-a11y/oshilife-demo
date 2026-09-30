@@ -218,6 +218,7 @@ class ChekiRecord {
     required this.eventId,
     required this.purchaseId,
     this.sourcePhotoId,
+    this.participationSlotId,
     this.shotAt,
     List<String>? memberNames,
     this.type = ChekiType.twoShot,
@@ -238,6 +239,7 @@ class ChekiRecord {
   final String eventId;
   final String purchaseId;
   String? sourcePhotoId;
+  String? participationSlotId;
   DateTime? shotAt;
   List<String> memberNames;
   ChekiType type;
@@ -254,6 +256,7 @@ class ChekiRecord {
     'eventId': eventId,
     'purchaseId': purchaseId,
     'sourcePhotoId': sourcePhotoId,
+    'participationSlotId': participationSlotId,
     'shotAt': shotAt?.toIso8601String(),
     'memberNames': memberNames,
     'type': type.name,
@@ -271,6 +274,7 @@ class ChekiRecord {
     eventId: json['eventId'] as String? ?? '',
     purchaseId: json['purchaseId'] as String? ?? '',
     sourcePhotoId: json['sourcePhotoId'] as String?,
+    participationSlotId: json['participationSlotId'] as String?,
     shotAt: DateTime.tryParse(json['shotAt'] as String? ?? ''),
     memberNames: _stringList(json['memberNames']),
     type: ChekiType.values.firstWhere(
@@ -335,6 +339,7 @@ class TalkLog {
     String? id,
     this.eventId = '',
     this.eventName = '',
+    this.participationSlotId,
     List<String>? participantNames,
     DateTime? talkedAt,
     this.sessionLabel = '',
@@ -357,6 +362,7 @@ class TalkLog {
   final String id;
   final String eventId;
   String eventName;
+  String? participationSlotId;
   List<String> participantNames;
   DateTime talkedAt;
   String sessionLabel;
@@ -374,6 +380,7 @@ class TalkLog {
     'id': id,
     'eventId': eventId,
     'eventName': eventName,
+    'participationSlotId': participationSlotId,
     'participantNames': participantNames,
     'talkedAt': talkedAt.toIso8601String(),
     'sessionLabel': sessionLabel,
@@ -390,6 +397,7 @@ class TalkLog {
     id: json['id'] as String?,
     eventId: json['eventId'] as String? ?? '',
     eventName: json['eventName'] as String? ?? '',
+    participationSlotId: json['participationSlotId'] as String?,
     participantNames: _stringList(json['participantNames']),
     talkedAt:
         DateTime.tryParse(json['talkedAt'] as String? ?? '') ?? DateTime.now(),
@@ -469,6 +477,27 @@ extension TransactionCategoryX on TransactionCategory {
   }
 }
 
+
+class EventAllocation {
+  EventAllocation({
+    required this.eventId,
+    required this.amount,
+  });
+
+  final String eventId;
+  final int amount;
+
+  Map<String, dynamic> toJson() => {
+    'eventId': eventId,
+    'amount': amount,
+  };
+
+  factory EventAllocation.fromJson(Map<String, dynamic> json) => EventAllocation(
+    eventId: json['eventId'] as String? ?? '',
+    amount: (json['amount'] as num?)?.toInt() ?? 0,
+  );
+}
+
 class OshiTransaction {
   OshiTransaction({
     String? id,
@@ -478,6 +507,7 @@ class OshiTransaction {
     this.category = TransactionCategory.other,
     this.paymentMethod = '',
     this.eventId,
+    List<EventAllocation>? eventAllocations,
     List<String>? memberNames,
     this.memo = '',
     this.sourceType,
@@ -486,6 +516,7 @@ class OshiTransaction {
     DateTime? updatedAt,
   }) : id = id ?? newActivityId('txn'),
        date = date ?? DateTime.now(),
+       eventAllocations = eventAllocations ?? <EventAllocation>[],
        memberNames = memberNames ?? <String>[],
        createdAt = createdAt ?? DateTime.now(),
        updatedAt = updatedAt ?? DateTime.now();
@@ -497,6 +528,7 @@ class OshiTransaction {
   TransactionCategory category;
   String paymentMethod;
   String? eventId;
+  List<EventAllocation> eventAllocations;
   List<String> memberNames;
   String memo;
   String? sourceType;
@@ -506,6 +538,24 @@ class OshiTransaction {
 
   int get signedAmount => amount * type.sign;
 
+  int amountForEvent(String targetEventId) {
+    final allocated = eventAllocations
+        .where((item) => item.eventId == targetEventId)
+        .fold<int>(0, (sum, item) => sum + item.amount);
+    if (allocated > 0) return allocated;
+    return eventId == targetEventId ? amount : 0;
+  }
+
+  bool isLinkedToEvent(String targetEventId) => amountForEvent(targetEventId) > 0;
+
+  int get allocatedAmount =>
+      eventAllocations.fold<int>(0, (sum, item) => sum + item.amount);
+
+  int get unallocatedAmount {
+    final value = amount - allocatedAmount;
+    return value < 0 ? 0 : value;
+  }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'type': type.name,
@@ -514,6 +564,7 @@ class OshiTransaction {
     'category': category.name,
     'paymentMethod': paymentMethod,
     'eventId': eventId,
+    'eventAllocations': eventAllocations.map((e) => e.toJson()).toList(),
     'memberNames': memberNames,
     'memo': memo,
     'sourceType': sourceType,
@@ -537,6 +588,10 @@ class OshiTransaction {
         ),
         paymentMethod: json['paymentMethod'] as String? ?? '',
         eventId: json['eventId'] as String?,
+        eventAllocations: _mapList(json['eventAllocations'])
+            .map(EventAllocation.fromJson)
+            .where((e) => e.eventId.isNotEmpty && e.amount > 0)
+            .toList(),
         memberNames: _stringList(json['memberNames']),
         memo: json['memo'] as String? ?? '',
         sourceType: json['sourceType'] as String?,

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 const profileLabels = <String, String>{
   'furigana': 'ふりがな',
   'nickname': 'ニックネーム',
-  'birthday': '誕生日（YYYY-MM-DD）',
+  'birthday': '誕生日（例：4月12日 / 2001-04-12）',
   'hometown': '出身地',
   'height': '身長',
   'hobby': '趣味',

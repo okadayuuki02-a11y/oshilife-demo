@@ -402,6 +402,7 @@ class _TicketEditScreenState extends State<TicketEditScreen> {
           TextField(
             controller: _amount,
             keyboardType: TextInputType.number,
+            onChanged: (_) => setState(() {}),
             decoration: _decoration('金額', icon: Icons.currency_yen_rounded),
           ),
           const SizedBox(height: 12),
@@ -1253,6 +1254,7 @@ class _ChekiRecordEditScreenState extends State<ChekiRecordEditScreen> {
         eventId: initial.eventId,
         purchaseId: initial.purchaseId,
         sourcePhotoId: initial.sourcePhotoId,
+        participationSlotId: initial.participationSlotId,
         shotAt: initial.shotAt,
         memberNames: _members.toList(),
         type: _type,
@@ -1454,7 +1456,9 @@ class _EventTransactionScreenState extends State<EventTransactionScreen> {
     final values = await ActivityStorage.loadTransactions();
     if (!mounted) return;
     setState(() {
-      _transactions = values.where((e) => e.eventId == widget.event.id).toList()
+      _transactions = values
+          .where((e) => e.isLinkedToEvent(widget.event.id))
+          .toList()
         ..sort((a, b) => b.date.compareTo(a.date));
     });
   }
@@ -1465,6 +1469,7 @@ class _EventTransactionScreenState extends State<EventTransactionScreen> {
         builder: (_) => TransactionEditScreen(
           eventId: widget.event.id,
           oshis: widget.oshis,
+          events: <OshiEvent>[widget.event],
           initial: initial,
         ),
       ),
@@ -1477,7 +1482,10 @@ class _EventTransactionScreenState extends State<EventTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final total = _transactions.fold<int>(0, (sum, e) => sum + e.signedAmount);
+    final total = _transactions.fold<int>(
+      0,
+      (sum, e) => sum + e.amountForEvent(widget.event.id) * e.type.sign,
+    );
     return Scaffold(
       backgroundColor: _background,
       appBar: AppBar(
@@ -1517,7 +1525,8 @@ class _EventTransactionScreenState extends State<EventTransactionScreen> {
                   side: const BorderSide(color: _border),
                 ),
                 child: ListTile(
-                  onTap: transaction.sourceType == null
+                  onTap: transaction.sourceType == null &&
+                          transaction.eventAllocations.length <= 1
                       ? () => _edit(transaction)
                       : null,
                   leading: CircleAvatar(
@@ -1541,7 +1550,7 @@ class _EventTransactionScreenState extends State<EventTransactionScreen> {
                     ].join('・'),
                   ),
                   trailing: Text(
-                    '${transaction.signedAmount < 0 ? '-' : '+'}${_money(transaction.amount)}',
+                    '${transaction.type == TransactionType.expense ? '-' : '+'}${_money(transaction.amountForEvent(widget.event.id))}',
                     style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
                 ),
@@ -1558,11 +1567,13 @@ class TransactionEditScreen extends StatefulWidget {
     super.key,
     this.eventId,
     required this.oshis,
+    this.events = const <OshiEvent>[],
     this.initial,
   });
 
   final String? eventId;
   final List<Oshi> oshis;
+  final List<OshiEvent> events;
   final OshiTransaction? initial;
 
   @override
@@ -1577,6 +1588,7 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
   late final TextEditingController _amount;
   late final TextEditingController _payment;
   late final TextEditingController _memo;
+  final Map<String, TextEditingController> _allocationControllers = {};
 
   @override
   void initState() {
@@ -1592,6 +1604,23 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
     _amount = TextEditingController(text: initial?.amount.toString() ?? '');
     _payment = TextEditingController(text: initial?.paymentMethod ?? '');
     _memo = TextEditingController(text: initial?.memo ?? '');
+
+    final initialAllocations = <String, int>{
+      for (final item in initial?.eventAllocations ?? const <EventAllocation>[])
+        item.eventId: item.amount,
+    };
+    if (initialAllocations.isEmpty &&
+        initial?.eventId != null &&
+        (initial?.amount ?? 0) > 0) {
+      initialAllocations[initial!.eventId!] = initial.amount;
+    }
+    for (final event in widget.events) {
+      _allocationControllers[event.id] = TextEditingController(
+        text: (initialAllocations[event.id] ?? 0) > 0
+            ? initialAllocations[event.id].toString()
+            : '',
+      );
+    }
   }
 
   List<TransactionCategory> _categoriesForType(TransactionType type) {
@@ -1627,6 +1656,9 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
     _amount.dispose();
     _payment.dispose();
     _memo.dispose();
+    for (final controller in _allocationControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -1659,6 +1691,41 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
       return;
     }
     final initial = widget.initial;
+    var allocations = _allocationControllers.entries
+        .map(
+          (entry) => EventAllocation(
+            eventId: entry.key,
+            amount: int.tryParse(
+                  entry.value.text.replaceAll(',', '').trim(),
+                ) ??
+                0,
+          ),
+        )
+        .where((entry) => entry.amount > 0)
+        .toList();
+
+    if (widget.eventId != null && allocations.isEmpty) {
+      allocations = <EventAllocation>[
+        EventAllocation(eventId: widget.eventId!, amount: amount),
+      ];
+    }
+
+    final allocated = allocations.fold<int>(
+      0,
+      (sum, entry) => sum + entry.amount,
+    );
+    if (allocated > amount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('イベントへの配分額が支払額を超えています')),
+      );
+      return;
+    }
+
+    final legacyEventId = widget.eventId ??
+        (allocations.length == 1 && allocated == amount
+            ? allocations.first.eventId
+            : null);
+
     Navigator.pop(
       context,
       OshiTransaction(
@@ -1668,7 +1735,8 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
         date: _dateValue,
         category: _category,
         paymentMethod: _payment.text.trim(),
-        eventId: widget.eventId ?? initial?.eventId,
+        eventId: legacyEventId,
+        eventAllocations: allocations,
         memberNames: _members.toList(),
         memo: _memo.text.trim(),
         sourceType: initial?.sourceType,
@@ -1724,6 +1792,7 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
           TextField(
             controller: _amount,
             keyboardType: TextInputType.number,
+            onChanged: (_) => setState(() {}),
             decoration: _decoration('金額', icon: Icons.currency_yen_rounded),
           ),
           const SizedBox(height: 12),
@@ -1745,6 +1814,68 @@ class _TransactionEditScreenState extends State<TransactionEditScreen> {
             decoration: _decoration('支払方法・入金元（任意）'),
           ),
           const SizedBox(height: 12),
+          if (widget.events.isNotEmpty &&
+              (_type == TransactionType.expense ||
+                  _type == TransactionType.refund)) ...[
+            const Text(
+              'イベントへの配分',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              '1回の支払いを複数イベントに分けられます。家計簿では支払日に全額、各イベントでは配分額だけを表示します。',
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFF716B78),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 8),
+            for (final event in widget.events)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: TextField(
+                  controller: _allocationControllers[event.id],
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => setState(() {}),
+                  decoration: _decoration(
+                    '${event.date.month}/${event.date.day}  ${event.title}',
+                    icon: Icons.event_outlined,
+                  ).copyWith(suffixText: '円'),
+                ),
+              ),
+            Builder(
+              builder: (context) {
+                final totalAmount =
+                    int.tryParse(_amount.text.replaceAll(',', '').trim()) ?? 0;
+                final allocated = _allocationControllers.values.fold<int>(
+                  0,
+                  (sum, controller) =>
+                      sum +
+                      (int.tryParse(
+                            controller.text.replaceAll(',', '').trim(),
+                          ) ??
+                          0),
+                );
+                final unallocated = totalAmount - allocated;
+                return Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: _lightPurple,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '配分済 ${_money(allocated)} / 未配分 ${_money(unallocated < 0 ? 0 : unallocated)}',
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
           if (widget.oshis.isNotEmpty) ...[
             const Text(
               '関連する推し（任意）',
@@ -2114,6 +2245,7 @@ class _RecurringTransactionEditScreenState
           TextField(
             controller: _amount,
             keyboardType: TextInputType.number,
+            onChanged: (_) => setState(() {}),
             decoration: _decoration('金額', icon: Icons.currency_yen_rounded),
           ),
           const SizedBox(height: 12),
@@ -2292,10 +2424,14 @@ class _OshiWalletScreenState extends State<OshiWalletScreen> {
       .where((e) => e.date.year == _month.year && e.date.month == _month.month)
       .toList();
 
-  Future<void> _add() async {
+  Future<void> _add([OshiTransaction? initial]) async {
     final result = await Navigator.of(context).push<OshiTransaction>(
       MaterialPageRoute(
-        builder: (_) => TransactionEditScreen(oshis: widget.oshis),
+        builder: (_) => TransactionEditScreen(
+          oshis: widget.oshis,
+          events: widget.events,
+          initial: initial,
+        ),
       ),
     );
     if (result == null) return;
@@ -2329,6 +2465,17 @@ class _OshiWalletScreenState extends State<OshiWalletScreen> {
       if (event.id == id) return event.title;
     }
     return '';
+  }
+
+  String _eventLabels(OshiTransaction value) {
+    final ids = value.eventAllocations.isNotEmpty
+        ? value.eventAllocations.map((e) => e.eventId).toSet()
+        : <String>{if (value.eventId != null) value.eventId!};
+    final labels = ids
+        .map(_eventName)
+        .where((name) => name.isNotEmpty)
+        .toList();
+    return labels.join(' / ');
   }
 
   @override
@@ -2464,6 +2611,7 @@ class _OshiWalletScreenState extends State<OshiWalletScreen> {
                   side: const BorderSide(color: _border),
                 ),
                 child: ListTile(
+                  onTap: value.sourceType == null ? () => _add(value) : null,
                   title: Text(
                     value.category.label,
                     style: const TextStyle(fontWeight: FontWeight.w900),
@@ -2471,8 +2619,11 @@ class _OshiWalletScreenState extends State<OshiWalletScreen> {
                   subtitle: Text(
                     [
                       _date(value.date),
-                      if (_eventName(value.eventId).isNotEmpty)
-                        _eventName(value.eventId),
+                      if (_eventLabels(value).isNotEmpty)
+                        _eventLabels(value),
+                      if (value.eventAllocations.isNotEmpty &&
+                          value.unallocatedAmount > 0)
+                        '未配分 ${_money(value.unallocatedAmount)}',
                       if (value.memo.trim().isNotEmpty) value.memo,
                     ].join('・'),
                     maxLines: 2,

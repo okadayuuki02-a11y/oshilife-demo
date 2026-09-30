@@ -9,6 +9,7 @@ import '../widgets/oshi_profile_fields.dart';
 import '../widgets/group_suggestion_field.dart';
 import '../widgets/member_color_picker.dart';
 import '../widgets/photo_crop_screen.dart';
+import '../widgets/profile_auto_fill_button.dart';
 
 class OshiEditScreen extends StatefulWidget {
   const OshiEditScreen({
@@ -59,7 +60,9 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
     final values = <String, String>{
       'furigana': oshi.furigana,
       'nickname': oshi.nickname,
-      'birthday': oshi.birthday?.toIso8601String().substring(0, 10) ?? '',
+      'birthday': oshi.birthdayText.isNotEmpty
+          ? oshi.birthdayText
+          : (oshi.birthday?.toIso8601String().substring(0, 10) ?? ''),
       'hometown': oshi.hometown,
       'height': oshi.height,
       'hobby': oshi.hobby,
@@ -249,7 +252,8 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
     oshi.memberColorHex = _memberColorHex;
     oshi.furigana = _profileFields['furigana']!.text.trim();
     oshi.nickname = _profileFields['nickname']!.text.trim();
-    oshi.birthday = DateTime.tryParse(_profileFields['birthday']!.text.trim());
+    oshi.birthdayText = _profileFields['birthday']!.text.trim();
+    oshi.birthday = DateTime.tryParse(oshi.birthdayText);
     oshi.hometown = _profileFields['hometown']!.text.trim();
     oshi.height = _profileFields['height']!.text.trim();
     oshi.hobby = _profileFields['hobby']!.text.trim();
@@ -337,6 +341,24 @@ class _OshiEditScreenState extends State<OshiEditScreen> {
                     text: value,
                     selection: TextSelection.collapsed(offset: value.length),
                   );
+                },
+              ),
+              const SizedBox(height: 14),
+              ProfileAutoFillButton(
+                nameController: _nameController,
+                profileControllers: _profileFields,
+                currentGroupName: _groupController.text,
+                currentMemberColorHex: _memberColorHex,
+                onGroupDetected: (value) {
+                  setState(() {
+                    _groupController.value = TextEditingValue(
+                      text: value,
+                      selection: TextSelection.collapsed(offset: value.length),
+                    );
+                  });
+                },
+                onMemberColorDetected: (value) {
+                  setState(() => _memberColorHex = value);
                 },
               ),
               const SizedBox(height: 16),
